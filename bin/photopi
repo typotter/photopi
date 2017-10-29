@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+"""
+Usage: photopi bark [options] [-v ...]
+       photopi tl load --device=<device> [--label=<label>, --base=<base_dir>, --remote=<remote_dir>]
+       photopi tl make --name=<name> --device=<device> [--label=<label>, --base=<base_dir>, --remote=<remote_dir>]
+       photopi tl store --device=<device> [--label=<label>, --base=<base_dir>, --remote=<remote_dir>]
+       photopi tl clean --device=<device> [--label=<label>, --base=<base_dir>]
+       photopi tl fixtar --device=<device> --rebase=<rebase> --part=<part> [--label=<label>, --base=<base_dir>]
+       photopi tl fixtars --device=<device>  [--label=<label>, --base=<base_dir>, --remote=<remote_dir>]
+       photopi timelapse --device=<device> --name=<name>  [--label=<label>, --base=<base_dir>, --remote=<remote_dir>]
+       photopi test --file=<file>
+
+Options:
+ --config=file    Specify a path to configuration instead of defaults
+ -v                         Include verbose logging. Multiple v's adds verbosity
+ -h, --help         Print help
+
+
+"""
+from docopt import docopt
+import sys, time, logging
+
+def setup_logging(root_verbose=False, photopi_verbose=False):
+    logging.captureWarnings(True)
+    logging.getLogger().setLevel(logging.WARN)
+    if root_verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    logging.getLogger('photopi').setLevel(logging.INFO)
+    if photopi_verbose:
+        logging.getLogger('photopi').setLevel(logging.DEBUG)
+
+def do_bark(args):
+    print("Bark")
+    from subprocess import call
+    call(["echo \"bark\""], shell=True)
+
+def main():
+    args = docopt(__doc__)
+    if args['-v']:
+        if args['-v'] > 1:
+            setup_logging(True, True)
+        else:
+            setup_logging(False, True)
+    else:
+        setup_logging()
+
+    if args['bark']:
+        return do_bark(args)
+    return False
+
+if __name__ == '__main__':
+        logging.basicConfig()
+        if main():
+                sys.exit(0)
+        sys.exit(1)
