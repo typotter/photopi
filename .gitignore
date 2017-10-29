@@ -1,1 +1,3 @@
-*.*~
+*~
+*.pyc
+photopi.egg-info
