@@ -2,6 +2,7 @@ from datetime import datetime
 import os, tarfile
 
 from photopi.core.borg import Borg
+from photopi.core.photopi import get_label_or_default
 from photopi.timelapse.spec import TimelapseSpec
 
 
@@ -32,11 +33,7 @@ class TimelapseModule(Borg):
         Borg.__init__(self)
 
     def main(self, args):
-        label = args['--label']
-        if not label:
-            label = datetime.now().strftime("%Y-%m-%d")
-
-        spec = TimelapseSpec(device=args["--device"], label=label)
+        spec = TimelapseSpec(device=args["--device"], label=get_label_or_default(args))
 
         if args["load"]:
             return self.load_timelapse(spec, base=get_base_dir(args), remote=get_remote_dir(args))
@@ -46,6 +43,8 @@ class TimelapseModule(Borg):
     def load_timelapse(self, spec, base=None, remote=None):
 
         archives = spec.listArchives(base=base, remote=remote)
+
+        print("Loading archives for {}/{}".format(spec.device, spec.label))
 
         print("Found {} archives".format(len(archives)))
 
