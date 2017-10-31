@@ -5,7 +5,7 @@ Usage: photopi bark [options] [-v ...]
        photopi raspistill test [--base=<base>]
        photopi server --port=<port>
        photopi remote --host=<host> --port=<port>
-       photopi raspistill
+       photopi raspistill test [--base=<base_dir>]
 
 Options:
  --config=file    Specify a path to configuration instead of defaults
