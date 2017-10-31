@@ -4,6 +4,7 @@ Usage: photopi bark [options] [-v ...]
        photopi timelapse load --device=<device> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
        photopi server --port=<port>
        photopi remote --host=<host> --port=<port>
+       photopi raspistill
 
 Options:
  --config=file    Specify a path to configuration instead of defaults
@@ -15,6 +16,7 @@ Options:
 from docopt import docopt
 import sys, time, logging
 
+import photopi.raspistill.module
 import photopi.timelapse.module
 import photopi.server.module
 import photopi.client.module
@@ -33,6 +35,12 @@ def do_bark(args):
     from subprocess import call
     call(["echo \"bark\""], shell=True)
 
+MAINMODS = {
+    "raspistill": photopi.raspistill.module.get_module,
+    "remote": photopi.client.module.get_module,
+    "server": photopi.server.module.get_module,
+    "timelapse": photopi.timelapse.module.get_module}
+
 def main():
     args = docopt(__doc__)
     if args['-v']:
@@ -45,15 +53,12 @@ def main():
 
     if args['bark']:
         return do_bark(args)
-    if args['timelapse']:
-        module = photopi.timelapse.module.get_module()
-        return module.main(args)
-    if args['server']:
-        module = photopi.server.module.get_module()
-        return module.main(args)
-    if args['remote']:
-        module = photopi.client.module.get_module()
-        return module.main(args)
+
+    # Try modules
+    for modcmd, injector in MAINMODS:
+        if args[modcmd]:
+            return injector().main(args)
+
     return False
 
 if __name__ == '__main__':
