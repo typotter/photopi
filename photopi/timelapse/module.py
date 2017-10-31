@@ -1,18 +1,9 @@
 from datetime import datetime
-import os, tarfile
+import fnmatch, os, tarfile
 
 from photopi.core.borg import Borg
-from photopi.core.photopi import get_label_or_default
+from photopi.core.photopi import get_label_or_default, get_base_dir
 from photopi.timelapse.spec import TimelapseSpec
-
-
-def get_base_dir(args):
-    if 'PHOTOPI_LOCAL_TIMELAPSE' in os.environ:
-        return os.environ['PHOTOPI_LOCAL_TIMELAPSE']
-    elif args['--base']:
-        return args['--base']
-    else:
-        return os.getcwd()
 
 def get_remote_dir(args):
     rem = None
