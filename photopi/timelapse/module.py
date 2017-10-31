@@ -28,7 +28,7 @@ class TimelapseModule(Borg):
 
         if args["load"]:
             return self.load_timelapse(spec, base=get_base_dir(args), remote=get_remote_dir(args))
-        return false
+        return False
 
 
     def load_timelapse(self, spec, base=None, remote=None):
