@@ -26,15 +26,22 @@ class RaspistillCmd(Thread):
             filestart=filestart)
         return spec
 
-    def __init__(self, label=None, output=None, quality=75, path=None, verbose=False, timeout=None, interval=None):
+    def __init__(self, label=None, output=None, quality=75, path=None, verbose=False, timeout=None, interval=None, filestart=None):
         Thread.__init__(self)
-        self.path = path
+        self.filestart = filestart
+        self.interval = interval
         self.label = label
         self.output = output
+        self.path = path
         self.quality = quality
-        self.verbose = verbose
         self.timeout = timeout
-        self.interval = interval
+        self.verbose = verbose
+
+        self._process = None
+
+    def stop(self):
+       if self._process is not None:
+          self._process.kill()
 
     def __str__(self):
         return str(self.__dict__)
@@ -58,10 +65,10 @@ class RaspistillCmd(Thread):
         return cmd
 
     def run(self):
-        p = Popen(self._get_cmd(), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        self._process = Popen(self._get_cmd())
 
-        self.stdout = p.stdout
+        self.stdout = self._process.stdout
 
-        self.output, self.err = p.communicate()
-        self.returncode = p.returncode
+        self.output, self.err = self._process.communicate()
 
+        self.returncode = self._process.returncode
