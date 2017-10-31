@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Usage: photopi bark [options] [-v ...]
-       photopi tl load --device=<device> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
+       photopi timelapse load --device=<device> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
 
 Options:
  --config=file    Specify a path to configuration instead of defaults
@@ -41,7 +41,7 @@ def main():
 
     if args['bark']:
         return do_bark(args)
-    if args['tl'] or args['timelapse']:
+    if args['timelapse']:
         module = photopi.timelapse.module.get_module()
         return module.main(args)
     return False
