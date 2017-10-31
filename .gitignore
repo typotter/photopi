@@ -1,3 +1,5 @@
 *~
 *.pyc
 photopi.egg-info
+build/*
+dist/*
