@@ -3,8 +3,6 @@ import os, time
 from photopi.raspistill.cmd import RaspistillCmd
 from photopi.core.photopi import get_label_or_default, get_base_dir
 
-TEST_FILE="test.jpg"
-
 class RaspistillModule():
 
     def __init__(self):
