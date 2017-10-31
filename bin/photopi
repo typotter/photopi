@@ -49,7 +49,7 @@ def main():
         return do_bark(args)
 
     # Try modules
-    for modcmd, injector in MAINMODS:
+    for modcmd, injector in MAINMODS.items():
         if args[modcmd]:
             return injector().main(args)
 

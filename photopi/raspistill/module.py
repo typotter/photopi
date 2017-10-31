@@ -1,6 +1,5 @@
-from photopi.core.borg import Borg
 
-class RaspistillModule(Borg):
+class RaspistillModule():
     def __init__(self):
         pass
     
