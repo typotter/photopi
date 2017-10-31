@@ -1,4 +1,4 @@
-import time
+import os, time
 
 from photopi.raspistill.spec import RaspistillSpec
 from photopi.core.photopi import get_label_or_default, get_base_dir
@@ -13,21 +13,43 @@ class RaspistillModule():
     
     def main(self, args):
         if args["test"]:
-            spec = RaspistillSpec.Test(path=get_base_dir(args))
-       
-            spec.start()
+            return self._do_test(args)
+        if args["tl"]:
+           return self._do_timelapse(args)
 
-            while True:
-                time.sleep(1)
-                print("still running")
 
-                if not spec.is_alive():
-                    break
+    def _do_timelapse(self, args):
+        print(args)
+        spec = RaspistillSpec.Timelapse(
+            label=get_label_or_default(args),
+            path=get_base_dir(args),
+            interval=args['--interval'],
+            timeout=args['--timeout'])
 
-            print(spec.output)
-            print(spec.err)
+        os.makedirs(spec.path, exist_ok=True)
+  
+        return self._run_spec(spec)
 
-            return spec.returncode == 0
+
+    def _do_test(self, args):
+        spec = RaspistillSpec.Test(path=get_base_dir(args))
+
+        return self._run_spec(spec)
+
+    def _run_spec(self, spec):
+        spec.start()
+
+        while True:
+            time.sleep(1)
+            print("still running")
+
+            if not spec.is_alive():
+                break
+
+        print(str(spec.output))
+        print(str(spec.err))
+
+        return spec.returncode == 0
 
 def get_module():
     return RaspistillModule()
