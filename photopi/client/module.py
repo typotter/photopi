@@ -9,16 +9,14 @@ class ClientModule(Borg):
         Borg.__init__(self)
 
     def main(self, args):
-        print("Client Module")
-        print(args)
+        print("Connecting to remote PHOTOPI")
         # rpyc client
         conn = rpyc.connect(args['--host'], int(args['--port']))
         c = conn.root
 
         if args['--module'] == "raspistill":
-            module = c.raspistill()
-            args[args['action']] = True
-            module.main(args)
+            args[args['--action']] = True
+            print(c.raspistill(args))
 
 def get_module():
     return ClientModule()
