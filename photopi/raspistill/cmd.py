@@ -11,7 +11,7 @@ class RaspistillCmd(Thread):
             quality=5)
         return spec
 
-    def Timelapse(path=None, label=None, interval=None, timeout=None, verbose=True):
+    def Timelapse(path=None, label=None, interval=None, timeout=None, verbose=True, filestart=None):
         if not interval:
             interval = 5000
         if not timeout:
@@ -22,7 +22,8 @@ class RaspistillCmd(Thread):
             output="image%06d.jpg",
             interval=interval,
             timeout=timeout,
-            verbose=verbose)
+            verbose=verbose,
+            filestart=filestart)
         return spec
 
     def __init__(self, label=None, output=None, quality=75, path=None, verbose=False, timeout=None, interval=None):
@@ -50,12 +51,13 @@ class RaspistillCmd(Thread):
             args = args + ["-tl", str(self.interval)]
         if self.timeout:
             args = args + ["-t", str(self.timeout)]
+        if self.filestart:
+            args = args + ["-fs", str(self.filestart)]
 
         cmd = ["raspistill"] + args
         return cmd
 
     def run(self):
-        print(self._get_cmd())
         p = Popen(self._get_cmd(), stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
         self.stdout = p.stdout
