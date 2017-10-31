@@ -5,7 +5,6 @@ Usage: photopi bark [options] [-v ...]
        photopi server --port=<port>
        photopi remote --module=raspistill --action=test --host=<host> --port=<port> [--base=<base_dir>]
        photopi raspistill test [--base=<base_dir>]
-       photopi raspistill tl [--label=<label>, --base=<base_dir>, --interval=<interval>, --timeout=<timeout>]
 
 Options:
  --config=file    Specify a path to configuration instead of defaults
