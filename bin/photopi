@@ -5,6 +5,7 @@ Usage: photopi bark [options] [-v ...]
        photopi raspistill test [--base=<base>]
        photopi server --port=<port>
        photopi remote --host=<host> --port=<port>
+       photopi raspistill
 
 Options:
  --config=file    Specify a path to configuration instead of defaults
@@ -37,7 +38,7 @@ def do_bark(args):
 
 MAINMODS = {
     "raspistill": photopi.raspistill.module.get_module,
-    "remote": photopi.remote.module.get_module,
+    "remote": photopi.client.module.get_module,
     "server": photopi.server.module.get_module,
     "timelapse": photopi.timelapse.module.get_module}
 
@@ -58,7 +59,6 @@ def main():
     for modcmd, injector in MAINMODS.items():
         if args[modcmd]:
             return injector().main(args)
-
 
     return False
 
