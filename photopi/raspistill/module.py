@@ -1,6 +1,6 @@
 import os, time
 
-from photopi.raspistill.spec import RaspistillSpec
+from photopi.raspistill.cmd import RaspistillCmd
 from photopi.core.photopi import get_label_or_default, get_base_dir
 
 TEST_FILE="test.jpg"
@@ -20,7 +20,7 @@ class RaspistillModule():
 
     def _do_timelapse(self, args):
         print(args)
-        spec = RaspistillSpec.Timelapse(
+        spec = RaspistillCmd.Timelapse(
             label=get_label_or_default(args),
             path=get_base_dir(args),
             interval=args['--interval'],
@@ -32,7 +32,7 @@ class RaspistillModule():
 
 
     def _do_test(self, args):
-        spec = RaspistillSpec.Test(path=get_base_dir(args))
+        spec = RaspistillCmd.Test(path=get_base_dir(args))
 
         return self._run_spec(spec)
 

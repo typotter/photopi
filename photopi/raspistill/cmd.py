@@ -2,10 +2,10 @@ import os
 from subprocess import Popen, PIPE
 from threading import Thread
 
-class RaspistillSpec(Thread):
+class RaspistillCmd(Thread):
 
     def Test(path=None, verbose=False):
-        spec = RaspistillSpec(path=path,
+        spec = RaspistillCmd(path=path,
             output="test.jpg",
             verbose=verbose,
             quality=5)
@@ -17,7 +17,7 @@ class RaspistillSpec(Thread):
         if not timeout:
             timeout = 32400000
 
-        spec = RaspistillSpec(
+        spec = RaspistillCmd(
             path=os.path.join(path, label),
             output="image%06d.jpg",
             interval=interval,
