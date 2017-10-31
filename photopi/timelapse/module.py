@@ -2,7 +2,11 @@ from datetime import datetime
 import fnmatch, os, tarfile
 
 from photopi.core.borg import Borg
+<<<<<<< HEAD
 from photopi.core.photopi import get_label_or_default, get_base_dir
+=======
+from photopi.core.photopi import get_label_or_default
+>>>>>>> Use core function in timelapse module
 from photopi.timelapse.spec import TimelapseSpec
 
 def get_remote_dir(args):
