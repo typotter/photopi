@@ -5,7 +5,7 @@ from threading import Thread
 
 
 from photopi.core.borg import Borg
-import photopi.timelapse.module
+import photopi.raspistill.module
 
 
 class MyService(rpyc.Service):
@@ -16,8 +16,8 @@ class MyService(rpyc.Service):
         # (to finalize the service, if needed)
         pass
 
-    def exposed_timelapse(self):
-        return "do a thing"
+    def exposed_raspistill(self, args):
+        return photopi.raspistill.module.get_module().main(args)
 
 
 class ServerModule(Borg):
