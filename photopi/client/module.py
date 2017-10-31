@@ -4,10 +4,6 @@ from photopi.core.borg import Borg
 from rpyc.utils.server import ThreadedServer
 from threading import Thread
 
-
-
-
-
 class ClientModule(Borg):
     def __init__(self):
         Borg.__init__(self)
@@ -18,7 +14,9 @@ class ClientModule(Borg):
         conn = rpyc.connect(args['--host'], int(args['--port']))
         c = conn.root
 
-        print(c.timelapse())
+        if args['raspistill']:
+            module = c.raspistill()
+            module.main(args)
 
 def get_module():
     return ClientModule()
