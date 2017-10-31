@@ -17,7 +17,6 @@ class RaspistillModule():
 
 
     def _do_timelapse(self, args):
-        print(args)
         spec = RaspistillCmd.Timelapse(
             label=get_label_or_default(args),
             path=get_base_dir(args),
