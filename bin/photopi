@@ -4,7 +4,7 @@ Usage: photopi bark [options] [-v ...]
        photopi timelapse load --device=<device> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
        photopi raspistill test [--base=<base>]
        photopi server --port=<port>
-       photopi remote --module=raspistill --action=test --host=<host> --port=<port> [--base=<base_dir>]
+       photopi remote raspistill test --host=<host> --port=<port> [--base=<base_dir>]
        photopi raspistill test [--base=<base_dir>]
        photopi raspistill tl [--label=<label>, --base=<base_dir>, --interval=<interval>, --timeout=<timeout>]
 
