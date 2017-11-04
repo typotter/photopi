@@ -1,5 +1,5 @@
 from datetime import datetime
-import fnmatch, os, tarfile
+import fnmatch, os, shutil, tarfile
 
 from photopi.core.borg import Borg
 from photopi.core.photopi import get_label_or_default, get_base_dir
@@ -24,18 +24,62 @@ class TimelapseModule(Borg):
         Borg.__init__(self)
 
     def main(self, args):
-        spec = TimelapseSpec(device=args["--device"], label=get_label_or_default(args))
+        label = args['--label']
+        if not label:
+            label = datetime.now().strftime("%Y-%m-%d")
+
+        spec = TimelapseSpec(device=args["--device"], label=label)
 
         if args["load"]:
             return self.load_timelapse(spec, base=get_base_dir(args), remote=get_remote_dir(args))
-        return False
 
+        if args["zip"]:
+            return self._do_zip(spec, base=get_base_dir(args), maxfiles=int(args["--maxfilecount"]))
+
+        return false
+
+
+    def _do_zip(self, spec, base=None, maxfiles=1000):
+        images = spec.listImages(base=base)
+
+        filestomove = images[:maxfiles]
+
+        s = spec.getNextPartSpec(base)
+        dest = s.getDir(base)
+        os.mkdir(dest)
+
+        for f in filestomove:
+            shutil.move(f, dest)
+
+        newtarname = s.getTarName(base)
+
+        newtar = tarfile.open(newtarname, "w|gz")
+
+        movedfiles = s.listImages(base)
+
+        print("Zipping images")
+        for f in movedfiles:
+            newtar.add(f, os.path.basename(f))
+
+        newtar.close()
+        print("Zipped {} files".format(len(movedfiles)))
+
+        lastnum = s.getLastImageNum(base)
+
+        print("removing files")
+        for f in movedfiles:
+            os.remove(f)
+        print("Done zipping part {}".format(s.partnum))
+
+        donefile = s.getDonefile(base)
+
+        f = open(donefile, "w")
+        f.write(str(lastnum))
+        f.close()
 
     def load_timelapse(self, spec, base=None, remote=None):
 
         archives = spec.listArchives(base=base, remote=remote)
-
-        print("Loading archives for {}/{}".format(spec.device, spec.label))
 
         print("Found {} archives".format(len(archives)))
 
