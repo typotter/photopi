@@ -2,7 +2,7 @@ from datetime import datetime
 import fnmatch, os, shutil, subprocess, tarfile
 
 from photopi.core.borg import Borg
-from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_dir
+from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_dir, get_device
 from photopi.timelapse.spec import TimelapseSpec
 from photopi.timelapse.cmd import MencoderCmd
 
@@ -15,7 +15,7 @@ class TimelapseModule(Borg):
         if not label:
             label = datetime.now().strftime("%Y-%m-%d")
 
-        spec = TimelapseSpec(device=args["--device"], label=label, base=get_base_dir(args), remote=get_remote_dir(args))
+        spec = TimelapseSpec(device=get_device(args), label=label, base=get_base_dir(args), remote=get_remote_dir(args))
 
         if args["load"]:
             return self.load_timelapse(spec)
@@ -27,7 +27,7 @@ class TimelapseModule(Borg):
             return self.store_timelapse_archives(spec, args["--dest"])
 
         if args["zip"]:
-            return self._do_zip(spec, maxfiles=args["--maxfilecount"])
+            return self._do_zip(spec, maxfiles=args["--maxfilecount"], tardest=args["--dest"])
 
         if args["clean"]:
             return self.clean_timelapse_temp(spec)
@@ -62,7 +62,7 @@ class TimelapseModule(Borg):
 
         return True
 
-    def _do_zip(self, spec, maxfiles=1000):
+    def _do_zip(self, spec, maxfiles=1000, tardest=None):
         if maxfiles is not None:
             maxfiles = int(maxfiles)
         else:
@@ -79,7 +79,13 @@ class TimelapseModule(Borg):
         for f in filestomove:
             shutil.move(f, dest)
 
-        newtarname = s.getTarName()
+        if not tardest:
+            newtarname = s.getTarName()
+        else:
+            basepath = os.path.join(tardest, s.device)
+            if not os.path.isdir(basepath):
+                os.makedirs(basepath)
+            newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
 
         newtar = tarfile.open(newtarname, "w|gz")
 
@@ -87,7 +93,9 @@ class TimelapseModule(Borg):
 
         print("Zipping images")
         for f in movedfiles:
-            newtar.add(f, os.path.basename(f))
+            bn = os.path.basename(f)
+            print("adding {}".format(bn))
+            newtar.add(f, bn)
 
         newtar.close()
         print("Zipped {} files".format(len(movedfiles)))

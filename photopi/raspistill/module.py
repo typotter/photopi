@@ -1,7 +1,7 @@
 import os, time
 
 from photopi.raspistill.cmd import RaspistillCmd
-from photopi.core.photopi import get_label_or_default, get_base_dir
+from photopi.core.photopi import get_label_or_default, get_base_dir, get_device
 
 class RaspistillModule():
 
@@ -19,7 +19,7 @@ class RaspistillModule():
     def _do_timelapse(self, args):
         spec = RaspistillCmd.Timelapse(
             label=get_label_or_default(args),
-            path=get_base_dir(args),
+            path=os.path.join(get_base_dir(args), get_device(args)),
             interval=args['--interval'],
             timeout=args['--timeout'])
 

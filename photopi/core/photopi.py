@@ -1,4 +1,4 @@
-import os
+import os, socket
 
 from datetime import datetime
 
@@ -29,3 +29,9 @@ def get_remote_dir(args):
         return rem.split(";")
     else:
         return rem
+
+def get_device(args):
+    if args['--device']:
+        return args['--device']
+
+    return socket.gethostname()
