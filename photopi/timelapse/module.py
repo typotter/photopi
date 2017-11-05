@@ -18,7 +18,7 @@ class TimelapseModule(Borg):
         spec = TimelapseSpec(device=args["--device"], label=label, base=get_base_dir(args), remote=get_remote_dir(args))
 
         if args["load"]:
-            return self.load_timelapse(spec, base=get_base_dir(args), remote=get_remote_dir(args))
+            return self.load_timelapse(spec)
 
         if args["make"]:
             return self.make_timelapse(spec, args['--name'], base=get_base_dir(args), remote=get_remote_dir(args))
@@ -85,7 +85,7 @@ class TimelapseModule(Borg):
         return cmd.returncode == 0
 
 
-    def load_timelapse(self, spec, base=None, remote=None):
+    def load_timelapse(self, spec):
 
         archives = spec.listArchives()
 
@@ -147,6 +147,38 @@ class TimelapseModule(Borg):
         print("Extracted {} files".format(len(matches)))
 
         return len(duplicates) == 0
+
+    def store_timelapse_archives(args):
+        device = args['--device']
+        label = get_label(args)
+        print("Storing {}/{}".format(device, label))
+        
+        base_dir = get_base_dir(args)
+        remote_dir = get_remote_dir(args)
+        archives = get_archives(device, label, base_dir=base_dir)
+
+        print("{} archives to store".format(len(archives)))
+
+        dest_dir = os.path.join(remote_dir, device)
+
+        moved = 0
+        for fname in archives:
+            print("moving {}".format(fname))
+            bn = os.path.basename(fname)
+            destfn = os.path.join(dest_dir, bn)
+            print("dest fn" + destfn)
+            if os.path.isfile(destfn):
+                print("{} exists, checking size".format(bn))
+                ds = os.stat(fname).st_size
+                bs = os.stat(destfn).st_size
+                if bs == ds:
+                  print("Skipping")
+                  continue
+
+            shutil.move(fname, dest_dir)
+            moved = moved + 1
+
+        print("Moved {}".format(moved))
 
 
 def get_module():
