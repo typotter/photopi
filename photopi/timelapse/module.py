@@ -27,7 +27,7 @@ class TimelapseModule(Borg):
             return self.store_timelapse_archives(spec, args["--dest"])
 
         if args["zip"]:
-            return self._do_zip(spec, maxfiles=int(args["--maxfilecount"]))
+            return self._do_zip(spec, maxfiles=args["--maxfilecount"])
 
         if args["clean"]:
             return self.clean_timelapse_temp(spec)
@@ -63,6 +63,11 @@ class TimelapseModule(Borg):
         return True
 
     def _do_zip(self, spec, maxfiles=1000):
+        if maxfiles is not None:
+            maxfiles = int(maxfiles)
+        else:
+            maxfiles = 1000
+
         images = spec.listImages()
 
         filestomove = images[:maxfiles]
