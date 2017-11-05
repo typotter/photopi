@@ -134,6 +134,9 @@ class TimelapseModule(Borg):
                 tarf.extractall(extract_dest)
             except IOError as e:
                 print("I/O error({0}): {1}".format(e.errno, e.strerror))
+            except EOFError as e:
+                print("EOF error")
+                print(e)
 
         matches = []
         duplicates = []
