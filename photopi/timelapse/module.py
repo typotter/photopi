@@ -11,7 +11,7 @@ class TimelapseModule(Borg):
         Borg.__init__(self)
 
     def main(self, args):
-        label = args['--label']
+        label = args["--label"]
         if not label:
             label = datetime.now().strftime("%Y-%m-%d")
 
@@ -21,10 +21,10 @@ class TimelapseModule(Borg):
             return self.load_timelapse(spec)
 
         if args["make"]:
-            return self.make_timelapse(spec, args['--name'])
+            return self.make_timelapse(spec, args["--name"])
 
         if args["store"]:
-            return self.store_timelapse_archives(spec, args['--dest'])
+            return self.store_timelapse_archives(spec, args["--dest"])
 
         if args["zip"]:
             return self._do_zip(spec, maxfiles=int(args["--maxfilecount"]))
@@ -32,8 +32,30 @@ class TimelapseModule(Borg):
         if args["clean"]:
             return self.clean_timelapse_temp(spec)
 
-        return false
+        return self._tl_suite(spec, args)
 
+    def _tl_suite(self, spec, args):
+        loaded = self.load_timelapse(spec)
+        if loaded:
+            print("Making Video")
+            made = self.make_timelapse(spec, args["--name"])
+            if made:
+                print("Video Made")
+                stored = self.store_timelapse_archives(spec, args["--dest"])
+                if stored:
+                    cleaned = self.clean_timelapse_temp(spec)
+                    if cleaned:
+                        print("Working files cleaned")
+                    else:
+                        print("Problem cleaning working files")
+                else:
+                    print("Problem storing archives")
+            else:
+                print("Problem making video")
+        else:
+            print("Duplicate frames exist")
+
+        return True
 
     def _do_zip(self, spec, maxfiles=1000):
         images = spec.listImages()
@@ -76,7 +98,6 @@ class TimelapseModule(Borg):
         return True
 
     def make_timelapse(self, spec, video):
-
         print("making {}/{}".format(spec.device, spec.label))
 
         dest_avi = spec.getAviFname(video)
@@ -88,11 +109,9 @@ class TimelapseModule(Borg):
         while not cmd.is_alive():
             time.sleep(1)
 
-        return cmd.returncode == 0
-
+        return cmd.returncode == 0 or cmd.returncode == None
 
     def load_timelapse(self, spec):
-
         archives = spec.listArchives()
 
         print("Found {} archives".format(len(archives)))
@@ -114,7 +133,7 @@ class TimelapseModule(Borg):
         matches = []
         duplicates = []
         for root, dirnames, filenames in os.walk(extract_dest):
-            for filename in fnmatch.filter(filenames, '*.jpg'):
+            for filename in fnmatch.filter(filenames, "*.jpg"):
                 dest_fname = os.path.join(extract_dest, filename)
                 src = os.path.join(root, filename)
                 fs = os.stat(src).st_size
