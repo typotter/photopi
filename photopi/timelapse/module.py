@@ -34,6 +34,10 @@ class TimelapseModule(Borg):
 
         return self._tl_suite(spec, args)
 
+    def _prompt(self, prompt):
+        ans = str(input(prompt + "Y/n? "))
+        return ans == 'y' or ans == 'Y' or ans == ''
+
     def _tl_suite(self, spec, args):
         loaded = self.load_timelapse(spec)
         if loaded:
@@ -41,6 +45,7 @@ class TimelapseModule(Borg):
             made = self.make_timelapse(spec, args["--name"])
             if made:
                 print("Video Made")
+                self._prompt("Store and clean working files?")
                 stored = self.store_timelapse_archives(spec, args["--dest"])
                 if stored:
                     cleaned = self.clean_timelapse_temp(spec)
