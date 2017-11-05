@@ -2,23 +2,9 @@ from datetime import datetime
 import fnmatch, os, shutil, subprocess, tarfile
 
 from photopi.core.borg import Borg
-from photopi.core.photopi import get_label_or_default, get_base_dir
+from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_dir
 from photopi.timelapse.spec import TimelapseSpec
 from photopi.timelapse.cmd import MencoderCmd
-
-def get_remote_dir(args):
-    rem = None
-    if 'PHOTOPI_REMOTE_TIMELAPSE' in os.environ:
-        rem = os.environ['PHOTOPI_REMOTE_TIMELAPSE']
-    elif args['--remote']:
-        rem = args['--remote']
-    else:
-        return None
-
-    if ";" in rem:
-        return rem.split(";")
-    else:
-        return rem
 
 class TimelapseModule(Borg):
     def __init__(self):
@@ -29,7 +15,7 @@ class TimelapseModule(Borg):
         if not label:
             label = datetime.now().strftime("%Y-%m-%d")
 
-        spec = TimelapseSpec(device=args["--device"], label=label)
+        spec = TimelapseSpec(device=args["--device"], label=label, base=get_base_dir(args), remote=get_remote_dir(args))
 
         if args["load"]:
             return self.load_timelapse(spec, base=get_base_dir(args), remote=get_remote_dir(args))
@@ -44,22 +30,22 @@ class TimelapseModule(Borg):
 
 
     def _do_zip(self, spec, base=None, maxfiles=1000):
-        images = spec.listImages(base=base)
+        images = spec.listImages()
 
         filestomove = images[:maxfiles]
 
-        s = spec.getNextPartSpec(base)
-        dest = s.getDir(base)
+        s = spec.getNextPartSpec()
+        dest = s.getDir()
         os.mkdir(dest)
 
         for f in filestomove:
             shutil.move(f, dest)
 
-        newtarname = s.getTarName(base)
+        newtarname = s.getTarName()
 
         newtar = tarfile.open(newtarname, "w|gz")
 
-        movedfiles = s.listImages(base)
+        movedfiles = s.listImages()
 
         print("Zipping images")
         for f in movedfiles:
@@ -68,14 +54,14 @@ class TimelapseModule(Borg):
         newtar.close()
         print("Zipped {} files".format(len(movedfiles)))
 
-        lastnum = s.getLastImageNum(base)
+        lastnum = s.getLastImageNum()
 
         print("removing files")
         for f in movedfiles:
             os.remove(f)
         print("Done zipping part {}".format(s.partnum))
 
-        donefile = s.getDonefile(base)
+        donefile = s.getDonefile()
 
         f = open(donefile, "w")
         f.write(str(lastnum))
@@ -89,7 +75,7 @@ class TimelapseModule(Borg):
 
         dest_avi = os.path.join(base,"{}-{}-timelapse-{}.avi".format(spec.device, spec.label, video))
 
-        cmd = MencoderCmd.AllFiles(spec.getExtractDir(base), dest_avi)
+        cmd = MencoderCmd.AllFiles(spec.getExtractDir(), dest_avi)
 
         cmd.start()
 
@@ -101,13 +87,13 @@ class TimelapseModule(Borg):
 
     def load_timelapse(self, spec, base=None, remote=None):
 
-        archives = spec.listArchives(base=base, remote=remote)
+        archives = spec.listArchives()
 
         print("Found {} archives".format(len(archives)))
 
         imagefiles = []
 
-        extract_dest = spec.getExtractDir(base)
+        extract_dest = spec.getExtractDir()
 
         for fname in archives:
             tarf = tarfile.open(fname, "r:gz")

@@ -15,3 +15,17 @@ def get_base_dir(args):
         return args['--base']
     else:
         return os.getcwd()
+
+def get_remote_dir(args):
+    rem = None
+    if 'PHOTOPI_REMOTE_TIMELAPSE' in os.environ:
+        rem = os.environ['PHOTOPI_REMOTE_TIMELAPSE']
+    elif args['--remote']:
+        rem = args['--remote']
+    else:
+        return None
+
+    if ";" in rem:
+        return rem.split(";")
+    else:
+        return rem
