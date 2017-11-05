@@ -23,8 +23,8 @@ class TimelapseModule(Borg):
         if args["make"]:
             return self.make_timelapse(spec, args['--name'])
 
-        if args["load"]:
-            return self.load_timelapse(spec)
+        if args["store"]:
+            return self.store_timelapse_archives(spec, args['--dest'])
 
         if args["zip"]:
             return self._do_zip(spec, maxfiles=int(args["--maxfilecount"]))
@@ -151,18 +151,14 @@ class TimelapseModule(Borg):
 
         return len(duplicates) == 0
 
-    def store_timelapse_archives(args):
-        device = args['--device']
-        label = get_label(args)
-        print("Storing {}/{}".format(device, label))
+    def store_timelapse_archives(self, spec, dest):
+        print("Storing {}/{}".format(spec.device, spec.label))
         
-        base_dir = get_base_dir(args)
-        remote_dir = get_remote_dir(args)
-        archives = get_archives(device, label, base_dir=base_dir)
+        archives = spec.listArchives()
 
         print("{} archives to store".format(len(archives)))
 
-        dest_dir = os.path.join(remote_dir, device)
+        dest_dir = os.path.join(dest, spec.device)
 
         moved = 0
         for fname in archives:
@@ -183,6 +179,7 @@ class TimelapseModule(Borg):
 
         print("Moved {}".format(moved))
 
+        return True
 
 def get_module():
     return TimelapseModule()
