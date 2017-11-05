@@ -55,6 +55,10 @@ class TimelapseSpec():
         images = self._get_files(pattern, self._base, self._remote)
         return sorted(images, key=get_image_number)
 
+    def listWorkingFiles(self):
+        pattern = os.path.join(self._base, self.device, self.label + "*")
+        return glob.glob(pattern)
+
     def listArchives(self):
         """ List the archives for this timelapse spec."""
         pattern = os.path.join(self.device, self.label) + "*.tar.gz"

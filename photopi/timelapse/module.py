@@ -29,6 +29,9 @@ class TimelapseModule(Borg):
         if args["zip"]:
             return self._do_zip(spec, maxfiles=int(args["--maxfilecount"]))
 
+        if args["clean"]:
+            return self.clean_timelapse_temp(spec)
+
         return false
 
 
@@ -180,6 +183,23 @@ class TimelapseModule(Borg):
         print("Moved {}".format(moved))
 
         return True
+
+    def clean_timelapse_temp(self, spec):
+        print("Cleaning {}/{}".format(spec.device, spec.label))
+
+        files = spec.listWorkingFiles()
+
+        print("Removing {} files and directories".format(len(files)))
+        for f in files:
+            if os.path.isdir(f):
+               shutil.rmtree(f)
+            else:
+                os.remove(f)
+
+        print("Done removing working files")
+
+        return True
+
 
 def get_module():
     return TimelapseModule()
