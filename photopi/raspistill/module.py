@@ -38,8 +38,6 @@ class RaspistillModule():
 
         while True:
             time.sleep(1)
-            print("still running")
-
             if not spec.is_alive():
                 break
 
