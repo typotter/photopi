@@ -26,6 +26,9 @@ class TimelapseSpec():
     def __str__(self):
         return str(self.__dict__)
 
+    def getExtractDir(self, base=None):
+        return os.path.join(self._baseorcwd(base), self.device, self.label)
+
     def getPartSpec(self, partnum):
         return TimelapsePartSpec(self.device, self.label, partnum, self)
 
@@ -62,6 +65,11 @@ class TimelapseSpec():
             return 0
         pss = sorted(ps, key=get_partdir_number)
         return get_partdir_number(pss[-1])
+
+    def _baseorcwd(self, base):
+        if not base:
+            return os.getcwd()
+        return base
 
     def _get_files(self, pattern, base, remote):
         if not base:

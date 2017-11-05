@@ -1,9 +1,10 @@
 from datetime import datetime
-import fnmatch, os, shutil, tarfile
+import fnmatch, os, shutil, subprocess, tarfile
 
 from photopi.core.borg import Borg
 from photopi.core.photopi import get_label_or_default, get_base_dir
 from photopi.timelapse.spec import TimelapseSpec
+from photopi.timelapse.cmd import MencoderCmd
 
 def get_remote_dir(args):
     rem = None
@@ -32,6 +33,9 @@ class TimelapseModule(Borg):
 
         if args["load"]:
             return self.load_timelapse(spec, base=get_base_dir(args), remote=get_remote_dir(args))
+
+        if args["make"]:
+            return self.make_timelapse(spec, args['--name'], base=get_base_dir(args), remote=get_remote_dir(args))
 
         if args["zip"]:
             return self._do_zip(spec, base=get_base_dir(args), maxfiles=int(args["--maxfilecount"]))
@@ -77,6 +81,24 @@ class TimelapseModule(Borg):
         f.write(str(lastnum))
         f.close()
 
+        return True
+
+    def make_timelapse(self, spec, video, base=None, remote=None):
+
+        print("making {}/{}".format(spec.device, spec.label))
+
+        dest_avi = os.path.join(base,"{}-{}-timelapse-{}.avi".format(spec.device, spec.label, video))
+
+        cmd = MencoderCmd.AllFiles(spec.getExtractDir(base), dest_avi)
+
+        cmd.start()
+
+        while not cmd.is_alive():
+            time.sleep(1)
+
+        return cmd.returncode == 0
+
+
     def load_timelapse(self, spec, base=None, remote=None):
 
         archives = spec.listArchives(base=base, remote=remote)
@@ -85,7 +107,7 @@ class TimelapseModule(Borg):
 
         imagefiles = []
 
-        extract_dest = os.path.join(base, spec.device, spec.label)
+        extract_dest = spec.getExtractDir(base)
 
         for fname in archives:
             tarf = tarfile.open(fname, "r:gz")
