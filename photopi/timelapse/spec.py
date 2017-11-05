@@ -74,6 +74,9 @@ class TimelapseSpec():
             return os.getcwd()
         return base
 
+    def getAviFname(self, videoname):
+        return os.path.join(self._base,"{}-{}-timelapse-{}.avi".format(self.device, self.label, videoname))
+
     def _get_files(self, pattern, base, remote):
         if not base:
             base = os.getcwd()

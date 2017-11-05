@@ -21,15 +21,18 @@ class TimelapseModule(Borg):
             return self.load_timelapse(spec)
 
         if args["make"]:
-            return self.make_timelapse(spec, args['--name'], base=get_base_dir(args), remote=get_remote_dir(args))
+            return self.make_timelapse(spec, args['--name'])
+
+        if args["load"]:
+            return self.load_timelapse(spec)
 
         if args["zip"]:
-            return self._do_zip(spec, base=get_base_dir(args), maxfiles=int(args["--maxfilecount"]))
+            return self._do_zip(spec, maxfiles=int(args["--maxfilecount"]))
 
         return false
 
 
-    def _do_zip(self, spec, base=None, maxfiles=1000):
+    def _do_zip(self, spec, maxfiles=1000):
         images = spec.listImages()
 
         filestomove = images[:maxfiles]
@@ -69,11 +72,11 @@ class TimelapseModule(Borg):
 
         return True
 
-    def make_timelapse(self, spec, video, base=None, remote=None):
+    def make_timelapse(self, spec, video):
 
         print("making {}/{}".format(spec.device, spec.label))
 
-        dest_avi = os.path.join(base,"{}-{}-timelapse-{}.avi".format(spec.device, spec.label, video))
+        dest_avi = spec.getAviFname(video)
 
         cmd = MencoderCmd.AllFiles(spec.getExtractDir(), dest_avi)
 
