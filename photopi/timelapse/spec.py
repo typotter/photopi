@@ -41,6 +41,15 @@ class TimelapseSpec():
             return None
         return self.getPartSpec(n)
 
+    def getLastImageNumber(self):
+        curimg = self.listImages()
+        if len(curimg) > 0:
+            return get_image_number(curimg[-1])
+        pspec = self.getLastPartSpec()
+        if pspec is not None:
+            return pspec.getLastImageNumber()
+        return -1
+
     def getNextPartSpec(self):
         n = self.getLastPartNumber()
         return self.getPartSpec(n + 1)
@@ -114,7 +123,7 @@ class TimelapsePartSpec():
     def getDonefile(self):
         return os.path.join(self._base, self.device, "{}.{}.p{}.done".format(self.label, self.device, self.partnum))
 
-    def getLastImageNum(self):
+    def getLastImageNumber(self):
         df = self.getDonefile()
         if os.path.isfile(df):
             f = open(df, 'r')
@@ -127,6 +136,6 @@ class TimelapsePartSpec():
             return 0
         prevpart = self.parent.getPartSpec(self.partnum - 1)
         if prevpart is not None:
-            return prevpart.getLastImageNum()
+            return prevpart.getLastImageNumber()
 
         return None

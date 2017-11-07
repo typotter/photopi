@@ -107,7 +107,7 @@ class TimelapseModule(Borg):
         newtar.close()
         print("Zipped {} files".format(len(movedfiles)))
 
-        lastnum = s.getLastImageNum()
+        lastnum = s.getLastImageNumber()
 
         print("removing files")
         for f in movedfiles:

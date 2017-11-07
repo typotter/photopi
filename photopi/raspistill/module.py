@@ -1,7 +1,8 @@
 import os, time
 
 from photopi.raspistill.cmd import RaspistillCmd
-from photopi.core.photopi import get_label_or_default, get_base_dir, get_device
+from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_dir, get_device
+from photopi.timelapse.spec import TimelapseSpec
 
 class RaspistillModule():
 
@@ -17,15 +18,24 @@ class RaspistillModule():
 
 
     def _do_timelapse(self, args):
-        spec = RaspistillCmd.Timelapse(
-            label=get_label_or_default(args),
-            path=os.path.join(get_base_dir(args), get_device(args)),
-            interval=args['--interval'],
-            timeout=args['--timeout'])
+        spec = TimelapseSpec(device=get_device(args), label=get_label_or_default(args), base=get_base_dir(args), remote=get_remote_dir(args))
 
-        os.makedirs(spec.path, exist_ok=True)
+        lastimage = spec.getLastImageNumber()
+        if lastimage == -1:
+            leadoff = 0
+        else:
+            leadoff = 100 - (lastimage % 100) + lastimage
+
+        cmd = RaspistillCmd.Timelapse(
+            label=spec.label,
+            path=os.path.join(get_base_dir(args), spec.device),
+            interval=args['--interval'],
+            timeout=args['--timeout'],
+            filestart=leadoff)
+
+        os.makedirs(cmd.path, exist_ok=True)
   
-        return self._run_spec(spec)
+        return self._run_spec(cmd)
 
 
     def _do_test(self, args):
