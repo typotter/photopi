@@ -27,7 +27,7 @@ class TimelapseModule(Borg):
             return self.store_timelapse_archives(spec, args["--dest"])
 
         if args["zip"]:
-            return self._do_zip(spec, maxfiles=args["--maxfilecount"], tardest=args["--dest"])
+            return self._do_zip(spec, maxfiles=args["--maxfilecount"], tardest=args["--dest"], verifycifs = args["--verifycifs"])
 
         if args["clean"]:
             return self.clean_timelapse_temp(spec)
@@ -62,7 +62,7 @@ class TimelapseModule(Borg):
 
         return True
 
-    def _do_zip(self, spec, maxfiles=1000, tardest=None):
+    def _do_zip(self, spec, maxfiles=1000, tardest=None, verifycifs=False):
         if maxfiles is not None:
             maxfiles = int(maxfiles)
         else:
@@ -79,13 +79,20 @@ class TimelapseModule(Borg):
         for f in filestomove:
             shutil.move(f, dest)
 
-        if not tardest:
-            newtarname = s.getTarName()
-        else:
+        newtarname = None
+
+        if tardest:
             basepath = os.path.join(tardest, s.device)
-            if not os.path.isdir(basepath):
-                os.makedirs(basepath)
-            newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
+            if not verifycifs or os.path.ismount(tardest):
+                if not os.path.isdir(basepath):
+                    os.makedirs(basepath)
+                newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
+            else:
+                print("Warning. Expected network mount.")
+
+        if not newtarname:
+            newtarname = s.getTarName()
+
 
         newtar = tarfile.open(newtarname, "w|gz")
 
