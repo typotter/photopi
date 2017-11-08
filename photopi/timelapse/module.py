@@ -89,8 +89,17 @@ class TimelapseModule(Borg):
 
         newtarname = None
 
+<<<<<<< HEAD
         if tardest and not rsync:
             newtarname = self._altdest(tardest, spec, verifiycifs)
+=======
+        if tardest:
+            basepath = os.path.join(tardest, s.device)
+            if not verifycifs or os.path.ismount(tardest):
+                if not os.path.isdir(basepath):
+                    os.makedirs(basepath)
+                newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
+>>>>>>> draft verifycifs
 
         if not newtarname:
             newtarname = s.getTarName()
