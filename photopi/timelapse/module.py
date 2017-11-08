@@ -79,13 +79,18 @@ class TimelapseModule(Borg):
         for f in filestomove:
             shutil.move(f, dest)
 
-        if not tardest:
-            newtarname = s.getTarName()
-        else:
+        newtarname = None
+
+        if tardest:
             basepath = os.path.join(tardest, s.device)
-            if not os.path.isdir(basepath):
-                os.makedirs(basepath)
-            newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
+            if not verifycifs or os.path.ismount(tardest):
+                if not os.path.isdir(basepath):
+                    os.makedirs(basepath)
+                newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
+
+        if not newtarname:
+            newtarname = s.getTarName()
+
 
         newtar = tarfile.open(newtarname, "w|gz")
 
