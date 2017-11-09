@@ -8,7 +8,6 @@ from photopi.timelapse.cmd import MencoderCmd
 
 def _is_mounted(path):
     while os.path.dirname(path) != path:
-        print("checking {} {}".format(path, os.path.dirname(path)))
         if os.path.ismount(path):
             return True
         path = os.path.dirname(path)
@@ -106,7 +105,7 @@ class TimelapseModule(Borg):
 
         movedfiles = s.listImages()
 
-        print("Zipping images")
+        print("Zipping {} images".format(len(movedfiles)))
         for f in movedfiles:
             bn = os.path.basename(f)
             print("adding {}".format(bn))
