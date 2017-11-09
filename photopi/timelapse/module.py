@@ -148,9 +148,8 @@ class TimelapseModule(Borg):
 
 
     def make_timelapse(self, spec, video):
-        print("making {}/{}".format(spec.device, spec.label))
-
         dest_avi = spec.getAviFname(video)
+        print("making {}/{} - {}".format(spec.device, spec.label, dest_avi))
 
         cmd = MencoderCmd.AllFiles(spec.getExtractDir(), dest_avi)
 
