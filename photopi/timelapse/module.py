@@ -6,6 +6,14 @@ from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_
 from photopi.timelapse.spec import TimelapseSpec
 from photopi.timelapse.cmd import MencoderCmd
 
+def _is_mounted(path):
+    while os.path.dirname(path) != path:
+        print("checking {} {}".format(path, os.path.dirname(path)))
+        if os.path.ismount(path):
+            return True
+        path = os.path.dirname(path)
+    return False
+
 class TimelapseModule(Borg):
     def __init__(self):
         Borg.__init__(self)
@@ -83,7 +91,7 @@ class TimelapseModule(Borg):
 
         if tardest:
             basepath = os.path.join(tardest, s.device)
-            if not verifycifs or os.path.ismount(tardest):
+            if not verifycifs or _is_mounted(tardest):
                 if not os.path.isdir(basepath):
                     os.makedirs(basepath)
                 newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
