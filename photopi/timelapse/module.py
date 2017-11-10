@@ -3,6 +3,7 @@ import fnmatch, os, shutil, subprocess, tarfile
 
 from photopi.core.borg import Borg
 from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_dir, get_device
+from photopi.core.cmd import RsyncCmd
 from photopi.timelapse.spec import TimelapseSpec
 from photopi.timelapse.cmd import MencoderCmd
 
@@ -34,7 +35,8 @@ class TimelapseModule(Borg):
             return self.store_timelapse_archives(spec, args["--dest"])
 
         if args["zip"]:
-            return self._do_zip(spec, maxfiles=args["--maxfilecount"], tardest=args["--dest"], verifycifs = args["--verifycifs"])
+            print(args)
+            return self._do_zip(spec, maxfiles=args["--maxfilecount"], tardest=args["--dest"], verifycifs = args["--verifycifs"], rsync = args["--rsync"])
 
         if args["clean"]:
             return self.clean_timelapse_temp(spec)
@@ -69,7 +71,7 @@ class TimelapseModule(Borg):
 
         return True
 
-    def _do_zip(self, spec, maxfiles=1000, tardest=None, verifycifs=False):
+    def _do_zip(self, spec, maxfiles=1000, tardest=None, verifycifs=False, rsync=False):
         if maxfiles is not None:
             maxfiles = int(maxfiles)
         else:
@@ -88,14 +90,8 @@ class TimelapseModule(Borg):
 
         newtarname = None
 
-        if tardest:
-            basepath = os.path.join(tardest, s.device)
-            if not verifycifs or _is_mounted(tardest):
-                if not os.path.isdir(basepath):
-                    os.makedirs(basepath)
-                newtarname = os.path.join(basepath, os.path.basename(s.getTarName()))
-            else:
-                print("Warning. Expected network mount.")
+        if tardest and not rsync:
+            newtarname = self._altdest(tardest, spec, verifiycifs)
 
         if not newtarname:
             newtarname = s.getTarName()
@@ -127,7 +123,30 @@ class TimelapseModule(Borg):
         f.write(str(lastnum))
         f.close()
 
+        if rsync and tardest:
+            print("Using rsync to move {} to {}".format(newtarname, tardest))
+            destname = self._altdest(tardest, s, verifycifs) 
+            if destname is None:
+                print("Alternate Destination is blank")
+            else:
+                rsynccmd = RsyncCmd.Move(newtarname, destname)
+                rsynccmd.run()
+        elif rsync:
+            print("rsync flag must be used in conjunction with dest")
+
         return True
+
+    def _altdest(self, tardest, spec, verifycifs):
+        basepath = os.path.join(tardest, spec.device)
+        if not verifycifs or _is_mounted(tardest):
+            if not os.path.isdir(basepath):
+                os.makedirs(basepath)
+            newtarname = os.path.join(basepath, os.path.basename(spec.getTarName()))
+            return newtarname
+        else:
+            print("Warning. Expected network mount.")
+            return None
+
 
     def make_timelapse(self, spec, video):
         print("making {}/{}".format(spec.device, spec.label))

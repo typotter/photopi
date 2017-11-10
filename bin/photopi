@@ -3,7 +3,7 @@
 Usage: photopi bark [options] [-v ...]
        photopi timelapse load --device=<device> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
        photopi timelapse make --device=<device> --name=<name> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
-       photopi timelapse zip [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>, --maxfilecount=<maxfiles>, --device=<device>, --dest=<dest>, --verifycifs]
+       photopi timelapse zip [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>, --maxfilecount=<maxfiles>, --device=<device>, --dest=<dest>, --verifycifs --rsync]
        photopi timelapse store --device=<device> --dest=<dest> [ --label=<label>, --base=<base_dir>, --remote=<remote>]
        photopi timelapse clean --device=<device> [ --label=<label>, --base=<base_dir>]
        photopi timelapse --device=<device> --name=<name> --dest=<dest> [ --label=<label>, --base=<base_dir>]
