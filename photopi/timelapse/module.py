@@ -35,7 +35,6 @@ class TimelapseModule(Borg):
             return self.store_timelapse_archives(spec, args["--dest"])
 
         if args["zip"]:
-            print(args)
             return self._do_zip(spec, maxfiles=args["--maxfilecount"], tardest=args["--dest"], verifycifs = args["--verifycifs"], rsync = args["--rsync"])
 
         if args["clean"]:

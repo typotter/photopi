@@ -26,7 +26,6 @@ class Cmd(Thread):
     def run(self):
         cmd = self._arguments()
         cmd.insert(0, self._cmd())
-        print(cmd)
         self._process = Popen(cmd)
         self.stdout = self._process.stdout
         self.output, self.err = self._process.communicate()
