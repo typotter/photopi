@@ -3,3 +3,4 @@
 photopi.egg-info
 build/*
 dist/*
+*.old
