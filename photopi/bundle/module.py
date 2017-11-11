@@ -20,12 +20,18 @@ class BundleModule(Borg):
         self._log.debug(config)
 
         if args['ls']:
-            self._ls(config)
+            self._ls(config, args)
 
-    def _ls(self, config):
+    def _ls(self, config, args):
         """ List the bundles accessible by this node."""
+
+        if args['--node']:
+            nodes = [{args['--node'], config['storage_nodes'][args['--node']]}]
+        else:
+            nodes = config['storage_nodes'].items()
+
         bundles = {}
-        for key, path in config['storage'].items():
+        for key, path in nodes:
             bundles[key] = self._get_bundles(path)
 
         for key, bundle in bundles.items():
