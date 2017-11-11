@@ -37,9 +37,10 @@ class BundleModule(Borg):
         for key, bundle in bundles.items():
             print(key)
             for device, labels in bundle.items():
-                print("\t{}".format(device))
-                for label in labels:
-                    print("\t\t{}".format(label))
+                if not args['--device'] or device == args['--device']:
+                    print("\t{}".format(device))
+                    for label in labels:
+                        print("\t\t{}".format(label))
 
     def _get_bundles(self, path):
 
