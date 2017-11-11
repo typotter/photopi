@@ -1,56 +1,66 @@
 #!/usr/bin/env python
 """
-Usage: photopi bark [options] [-v ...]
-       photopi timelapse load --device=<device> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
-       photopi timelapse make --device=<device> --name=<name> [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>]
-       photopi timelapse zip [ --label=<label>, --base=<base_dir>, --remote=<remote_dir>, --maxfilecount=<maxfiles>, --device=<device>, --dest=<dest>, --verifycifs --rsync]
-       photopi timelapse store --device=<device> --dest=<dest> [ --label=<label>, --base=<base_dir>, --remote=<remote>]
-       photopi timelapse clean --device=<device> [ --label=<label>, --base=<base_dir>]
-       photopi timelapse --device=<device> --name=<name> --dest=<dest> [ --label=<label>, --base=<base_dir>]
-       photopi raspistill test [--base=<base>]
-       photopi server --port=<port>
-       photopi remote raspistill test --host=<host> --port=<port> [--base=<base_dir>]
-       photopi raspistill test [--base=<base_dir>]
-       photopi raspistill tl [--label=<label>, --base=<base_dir>, --interval=<interval>, --timeout=<timeout>, --device=<device>]
-
+Usage: photopi run [options] [-v ...]
+       photopi bundle ls [options] [-v ...]
+       photopi help
 
 Options:
- --config=file    Specify a path to configuration instead of defaults
- -v                         Include verbose logging. Multiple v's adds verbosity
- -h, --help         Print help
-
+ --config=file  Specify a path to configuration instead of defaults
+ -v             Include verbose logging. Repeating v adds verbosity
+ -h, --help     Print help
 
 """
-from docopt import docopt
-import sys, time, logging
 
-import photopi.client.module
-import photopi.raspistill.module
-import photopi.server.module
-import photopi.timelapse.module
+import logging
+import sys
+import signal
+import time
 
-def setup_logging(root_verbose=False, photopi_verbose=False):
+import docopt
+
+from photopi.core.config import Configuration
+
+import photopi.bundle.module
+
+def setup_logging(root_verbose=False, app_verbose=False):
+    """ Configure logging levels. """
     logging.captureWarnings(True)
     logging.getLogger().setLevel(logging.WARN)
     if root_verbose:
         logging.getLogger().setLevel(logging.DEBUG)
     logging.getLogger('photopi').setLevel(logging.INFO)
-    if photopi_verbose:
+    if app_verbose:
         logging.getLogger('photopi').setLevel(logging.DEBUG)
 
-def do_bark(args):
-    print("Bark")
-    from subprocess import call
-    call(["echo \"bark\""], shell=True)
+def do_run(args):
+    """ Run loop. """
+    log = logging.getLogger('photopi.cli.run')
 
-MAINMODS = {
-    "raspistill": photopi.raspistill.module.get_module,
-    "remote": photopi.client.module.get_module,
-    "server": photopi.server.module.get_module,
-    "timelapse": photopi.timelapse.module.get_module}
+    stopping = False
+    def signal_handler(_, __):
+        """ Sets the stop flag to true so the loop exits. """
+        log.info("Stopping tasks")
+        stopping = True
+
+        log.info("Closing. Thank you for using photopi")
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    while not stopping:
+        config = Configuration(config_path=args['--config'])
+        log.info(config)
+        time.sleep(30)
+
+    signal.pause()
+    log.info("Shutdown complete")
+    return True
+
+MAINMODS = [photopi.bundle.module.MODULE]
 
 def main():
-    args = docopt(__doc__)
+    """ Main routine for the application. """
+    args = docopt.docopt(__doc__)
     if args['-v']:
         if args['-v'] > 1:
             setup_logging(True, True)
@@ -58,19 +68,22 @@ def main():
             setup_logging(False, True)
     else:
         setup_logging()
+    if args['run']:
+        return do_run(args)
 
-    if args['bark']:
-        return do_bark(args)
+    config = Configuration(config_path=args['--config'])
+    log = logging.getLogger('photopi.main')
 
     # Try modules
-    for modcmd, injector in MAINMODS.items():
+    for modcmd, injector in MAINMODS:
         if args[modcmd]:
-            return injector().main(args)
+            log.info("Running %s module", modcmd)
+            return injector().main(args, config)
 
     return False
 
 if __name__ == '__main__':
-        logging.basicConfig()
-        if main():
-                sys.exit(0)
-        sys.exit(1)
+    logging.basicConfig()
+    if main():
+        sys.exit(0)
+    sys.exit(1)
