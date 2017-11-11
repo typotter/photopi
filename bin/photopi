@@ -5,10 +5,11 @@ Usage: photopi run [options] [-v ...]
        photopi help
 
 Options:
- --config=file  Specify a path to configuration instead of defaults
- -v             Include verbose logging. Repeating v adds verbosity
- -h, --help     Print help
- --node=node    Limit the listing to files on one node
+ --config=file   Specify a path to configuration instead of defaults
+ -v              Include verbose logging. Repeating v adds verbosity
+ -h, --help      Print help
+ --node=node     Specify a node for the action
+ --device=device Specify a device for the action
 
 """
 
