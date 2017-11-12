@@ -5,6 +5,7 @@ import logging
 import os
 
 from photopi.core.borg import Borg
+from photopi.core.cmd import RsyncCmd
 from photopi.bundle.spec import BundleSort, BundleSpec
 
 class BundleModule(Borg):
@@ -21,6 +22,35 @@ class BundleModule(Borg):
 
         if args['ls']:
             return self._ls(config, args)
+
+        if args['fetch']:
+            return self._fetch(config, args)
+
+    def _fetch(self, config, args):
+        srcnode = args['--src']
+        self._log.info("Fetching bundles from %s", srcnode)
+
+        srcpath = config.storage_node(srcnode)
+        if srcpath is None:
+            self._log.error("Invalid src node")
+            return False
+
+        bundles = self._get_bundles(srcpath, args['--device'], args['--label'])
+
+        self._log.debug(bundles)
+
+        if args['--dest']:
+            destpath = config.storage_node(args['--dest'])
+            if destpath is None:
+                self._log.error("Invalid dest node")
+                return False
+        else:
+            destpath = config.storage_node()
+
+        specs = self._get_specs(bundles, srcpath)
+        for spec in specs:
+            for fname in spec.archives(done=args['--done']):
+                RsyncCmd(fname, destpath).run()
 
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
@@ -48,12 +78,21 @@ class BundleModule(Borg):
         if len(tupled) == 1:
             (key, device, label) = tupled[0]
             spec = BundleSpec(device, label, config['storage_nodes'][key])
-            print("Bundle has the following parts")
-            print(spec.parts())
+            for archive in spec.archives():
+                print(archive)
 
         return True
 
-    def _get_bundles(self, path, device_lim=None, label_lim=None):
+    @staticmethod
+    def _get_specs(bundles, path):
+        specs = []
+        for device, labels in bundles.items():
+            for label in labels:
+                specs.append(BundleSpec(device, label, path))
+        return specs
+
+    @staticmethod
+    def _get_bundles(path, device_lim=None, label_lim=None):
 
         archives = {}
         for root, devices, __ in os.walk(path):
