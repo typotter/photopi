@@ -34,6 +34,8 @@ class BundleModule(Borg):
         for key, path in nodes:
             bundles[key] = self._get_bundles(path, args['--device'], args['--label'])
 
+        self._log.debug("bundles found %s", bundles)
+
         tupled = []
         for key, bundle in bundles.items():
             print(key)
@@ -67,7 +69,6 @@ class BundleModule(Borg):
                         if label not in archives[device]:
                             archives[device].append(label)
 
-        self._log.debug("archives found %s", archives)
         return archives
 
 MODULE = ("bundle", BundleModule)
