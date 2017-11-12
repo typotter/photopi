@@ -2,6 +2,7 @@
 """
 Usage: photopi run [options] [-v ...]
        photopi bundle ls [options] [-v ...]
+       photopi bundle fetch --src=<src_node> [--done --dest=local] [options] [-v ...]
        photopi help
 
 Options:
@@ -20,9 +21,8 @@ import time
 
 import docopt
 
-from photopi.core.config import Configuration
-
 import photopi.bundle.module
+from photopi.core.config import Configuration, InvalidConfigError
 
 def setup_logging(root_verbose=False, app_verbose=False):
     """ Configure logging levels. """
@@ -48,9 +48,14 @@ def do_run(args):
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signal_handler)
-
+    config = None
     while not stopping:
-        config = Configuration(config_path=args['--config'])
+        try:
+            newconf = Configuration(config_path=args['--config'])
+            config = newconf
+        except InvalidConfigError as err:
+            log.error(err)
+
         log.info(config)
         time.sleep(30)
 
@@ -73,8 +78,13 @@ def main():
     if args['run']:
         return do_run(args)
 
-    config = Configuration(config_path=args['--config'])
     log = logging.getLogger('photopi.main')
+
+    try:
+        config = Configuration(config_path=args['--config'])
+    except InvalidConfigError as err:
+        log.error(err)
+        return False
 
     # Try modules
     for modcmd, injector in MAINMODS:
