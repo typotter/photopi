@@ -2,7 +2,7 @@
 """
 Usage: photopi run [options] [-v ...]
        photopi bundle ls [options] [-v ...]
-       photopi bundle fetch --src=<src_node> [--done --dest=local] [options] [-v ...]
+       photopi bundle fetch --src=<src_node> [--done --dest=local --move] [options] [-v ...]
        photopi help
 
 Options:
