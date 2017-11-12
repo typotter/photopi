@@ -5,7 +5,7 @@ import logging
 import os
 
 from photopi.core.borg import Borg
-from photopi.bundle.spec import BundleSort
+from photopi.bundle.spec import BundleSort, BundleSpec
 
 class BundleModule(Borg):
     """ Module for working with bundles of images. """
@@ -34,12 +34,20 @@ class BundleModule(Borg):
         for key, path in nodes:
             bundles[key] = self._get_bundles(path, args['--device'], args['--label'])
 
+        tupled = []
         for key, bundle in bundles.items():
             print(key)
             for device, labels in bundle.items():
                 print("\t{}".format(device))
                 for label in labels:
                     print("\t\t{}".format(label))
+                    tupled.append((key, device, label))
+
+        if len(tupled) == 1:
+            (key, device, label) = tupled[0]
+            spec = BundleSpec(device, label, config['storage_nodes'][key])
+            print("Bundle has the following parts")
+            print(spec.parts())
 
     def _get_bundles(self, path, device_lim=None, label_lim=None):
 
