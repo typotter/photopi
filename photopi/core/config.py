@@ -11,6 +11,11 @@ class ConfigNotFoundError(RuntimeError):
     pass
 
 
+class InvalidConfigError(RuntimeError):
+    """ Raised Error when the configuration is invalid. """
+    pass
+
+
 _CONFIG_LOCATIONS = ['photopi.yaml', os.path.expanduser('~/.photopi.yaml'),
                      os.path.join('/etc', 'photopi.yaml')]
 
@@ -40,6 +45,7 @@ class Configuration():
         self.log = logging.getLogger(
             "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
         self._config = self._get_config(config_path)
+        self._validate_config()
 
     def _get_config(self, config_path=None):
         if config_path:
@@ -54,6 +60,24 @@ class Configuration():
             "No configuration files could be found in any of: {}".format(
                 ', '.join(_CONFIG_LOCATIONS)))
 
+    def _validate_config(self):
+        verifypaths = [
+            ["storage_nodes", "local"],
+            ["storage_nodes", "swap"]]
+
+        for path in verifypaths:
+            if not self._check_deep(self._config, path):
+                raise InvalidConfigError(
+                    "Missing config entry for {}".format("/".join(path)))
+
+    def _check_deep(self, obj, keys):
+        if not keys:
+            return True
+
+        if keys[0] in obj.keys():
+            return self._check_deep(obj[keys[0]], keys[1:])
+        return False
+
     @staticmethod
     def _read_config_file(filename):
         "Read a config file and raise a ConfigNotFoundError if not found"
@@ -64,6 +88,13 @@ class Configuration():
             raise ConfigNotFoundError(
                 "Configuration file {} was not found".format(
                     filename))
+
+    def storage_node(self, node="local"):
+        """ Returns the path for storage node: `node` or None if `node` is not
+            defined in the config. """
+        if node in self._config['storage_nodes'].keys():
+            return self._config['storage_nodes'][node]
+        return None
 
     def __str__(self):
         return str(self._config)
