@@ -50,7 +50,7 @@ class BundleModule(Borg):
         specs = self._get_specs(bundles, srcpath)
         for spec in specs:
             for fname in spec.archives(done=args['--done']):
-                RsyncCmd(fname, destpath).run()
+                RsyncCmd(fname, destpath, args['--move']).run()
 
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
