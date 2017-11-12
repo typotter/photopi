@@ -3,6 +3,8 @@
 Usage: photopi run [options] [-v ...]
        photopi bundle ls [options] [-v ...]
        photopi bundle fetch --src=<src_node> [--done --dest=local --move] [options] [-v ...]
+       photopi bundle zip --next [--verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest>] [options]
+       photopi bundle zip --part=<partnum> [--verifycifs --rsync --maxfilecount=<maxfiles>] [options]
        photopi help
 
 Options:
@@ -11,7 +13,7 @@ Options:
  -h, --help      Print help
  --node=node     Specify a node for the action
  --device=device Specify a device for the action
- --label=label   Specify a label for the action
+ --label=today   Specify a label for the action
 """
 
 import logging

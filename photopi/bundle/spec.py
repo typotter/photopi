@@ -28,6 +28,18 @@ class BundleSpec:
         return BundleSpecPart(
             self.device, self.label, partnum, self._base, self)
 
+    def last_part_spec(self):
+        """ Gets the last fragment of this bundle. """
+        num = self.last_part_number()
+        if num == 0:
+            return None
+        return self.part_spec(num)
+
+    def next_part_spec(self):
+        """ The next fragment that this bundle would use. """
+        num = self.last_part_number()
+        return self.part_spec(num + 1)
+
     def archives(self, done=False):
         """ List of archive filenames for this bundle. """
         partarchs = sorted(glob.glob(
@@ -42,7 +54,8 @@ class BundleSpec:
                 partnum = BundleSort.partfile_number(archive)
                 self._log.debug(partnum)
                 partspec = self.part_spec(partnum)
-                self._log.debug("Checking for %s", partspec.donefilename)
+                self._log.debug("Checking for %s %s", archive,
+                                partspec.donefilename)
                 if partspec.is_done():
                     donearchives.append(archive)
             return donearchives
@@ -56,8 +69,16 @@ class BundleSpec:
 
     def parts(self):
         """ Set of part numbers that exist for this bundle. """
-        return set(list(map(BundleSort.partfile_number, self.archives())) +
-                   list(map(BundleSort.partdir_number, self.partdirs())))
+        return sorted(list(set(
+            list(map(BundleSort.partfile_number, self.archives())) +
+            list(map(BundleSort.partdir_number, self.partdirs())))))
+
+    def last_part_number(self):
+        """ Last fragment number for this bundle. """
+        parts = self.parts()
+        if not parts:
+            return 0
+        return parts[-1]
 
     def images(self, part=None):
         """ List the images for this bundle. """
@@ -66,7 +87,7 @@ class BundleSpec:
                                    "image*.jpg")
         else:
             pattern = os.path.join(self.device, self.label, "image*.jpg")
-
+        self._log.debug(os.path.join(self._base, pattern))
         images = glob.glob(os.path.join(self._base, pattern))
         return sorted(images, key=BundleSort.image_number)
 
@@ -93,6 +114,11 @@ class BundleSpecPart:
     def is_done(self):
         """ Indicates whether this fragment's archive has been written. """
         return os.path.isfile(self.donefilename)
+
+    def dirname(self):
+        """ Directory where the images in this bundleare stored. """
+        return os.path.join(self._base, self.device, self.label,
+                            "p{}".format(self.partnum))
 
     def _fname(self, pattern):
         return os.path.join(self._base, self.device,
@@ -144,7 +170,7 @@ class BundleSort:
     def partfile_number(fname):
         """ Extract the part number from a filename. """
         fname = os.path.basename(fname)
-        match = re.search(r'p(\d+)', fname)
+        match = re.search(r'p(\d+)\.tar\.gz', fname)
         return int(match.group(1))
 
     @staticmethod

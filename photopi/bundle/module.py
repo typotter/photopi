@@ -1,8 +1,11 @@
 """ Defines the Module for working with bundles of images. """
 
+from datetime import datetime
 import fnmatch
 import logging
 import os
+import shutil
+import tarfile
 
 from photopi.core.borg import Borg
 from photopi.core.cmd import RsyncCmd
@@ -25,6 +28,134 @@ class BundleModule(Borg):
 
         if args['fetch']:
             return self._fetch(config, args)
+
+        if args['zip']:
+            return self._zip(config, args)
+
+    def _buildspec(self, args, config):
+        label = args["--label"]
+        if not label:
+            label = datetime.now().strftime("%Y-%m-%d")
+
+        node = args["--node"] if args["--node"] else "local"
+        srcpath = config.storage_node(node)
+        if srcpath is None:
+            self._log.error("Invalid node")
+            return None
+
+        return BundleSpec(args['--device'], label, srcpath)
+
+    def _fragmentimages(self, spec, fragment, maxfiles):
+        self._log.info("Moving image files for zip")
+
+        if not maxfiles:
+            maxfiles = 1000
+
+        images = spec.images()
+
+        filestomove = images[:maxfiles]
+
+        if filestomove:
+            dest = fragment.dirname()
+            os.mkdir(dest)
+
+            for stream in filestomove:
+                shutil.move(stream, dest)
+            return True
+
+        return False
+
+    def _zip_files(self, newtarname, frag):
+        files = frag.images()
+        if not files:
+            return False
+
+        newtar = tarfile.open(newtarname, "w|gz")
+
+        self._log.info("Zipping %d images", len(files))
+        for fname in files:
+            basename = os.path.basename(fname)
+            self._log.info("adding %s", basename)
+            newtar.add(fname, basename)
+
+        newtar.close()
+        self._log.info("Zipped %d files", len(files))
+
+        lastnum = frag.last_image_number()
+
+        self._log.info("removing files")
+        for fname in files:
+            os.remove(fname)
+        self._log.info("Done zipping part %d", frag.partnum)
+
+        donefile = frag.donefilename
+
+        stream = open(donefile, "w")
+        stream.write(str(lastnum))
+        stream.close()
+        return True
+
+    def _zip(self, config, args):
+        spec = self._buildspec(args, config)
+        if not spec:
+            return False
+        self._log.debug("Zipping Bundle %s/%s", spec.device, spec.label)
+
+        rsync = args["--rsync"]
+
+        frag = None
+
+        if args["--next"]:
+            frag = spec.next_part_spec()
+            if not self._fragmentimages(spec, frag,
+                                        int(args['--maxfilecount'])):
+                self._log.info("no images to move")
+        else:
+            frag = spec.part_spec(int(args['--part']))
+
+        newtarname = None
+
+        tardest = config.storage_node(args['--dest'])
+
+        if tardest and not rsync:
+            newtarname = self._altdest(tardest, frag, args["--verifycifs"])
+
+        if not newtarname:
+            newtarname = frag.tarfilename
+
+        if self._zip_files(newtarname, frag):
+            if rsync and tardest:
+                self._log.info("Using rsync to move %s to %s",
+                               newtarname, tardest)
+                destname = self._altdest(tardest, frag, args["--verifycifs"])
+                if destname is None:
+                    self._log.warning("Alternate Destination is blank")
+                else:
+                    rsynccmd = RsyncCmd.Move(newtarname, destname)
+                    rsynccmd.run()
+                    rsynccmd = RsyncCmd.Move(frag.donefilename,
+                                             os.path.dirname(destname))
+                    rsynccmd.run()
+            elif rsync:
+                self._log.error(
+                    "rsync flag must be used in conjunction with dest")
+            return True
+
+        self._log.warning("No images found at %s/%s/%d", spec.device,
+                          spec.label, frag.partnum)
+        return True
+
+    def _altdest(self, tardest, spec, verifycifs):
+        basepath = os.path.join(tardest, spec.device)
+        if not verifycifs or self._is_mounted(tardest):
+            if not os.path.isdir(basepath):
+                os.makedirs(basepath)
+            newtarname = os.path.join(basepath,
+                                      os.path.basename(spec.tarfilename))
+            return newtarname
+        else:
+            self._log.error("Warning. Expected mount path is not mounted.")
+            return None
 
     def _fetch(self, config, args):
         srcnode = args['--src']
@@ -62,7 +193,8 @@ class BundleModule(Borg):
 
         bundles = {}
         for key, path in nodes:
-            bundles[key] = self._get_bundles(path, args['--device'], args['--label'])
+            bundles[key] = self._get_bundles(path, args['--device'],
+                                             args['--label'])
 
         self._log.debug("bundles found %s", bundles)
 
@@ -109,5 +241,13 @@ class BundleModule(Borg):
                             archives[device].append(label)
 
         return archives
+
+    @staticmethod
+    def _is_mounted(path):
+        while os.path.dirname(path) != path:
+            if os.path.ismount(path):
+                return True
+            path = os.path.dirname(path)
+        return False
 
 MODULE = ("bundle", BundleModule)
