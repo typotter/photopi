@@ -20,7 +20,7 @@ class BundleModule(Borg):
         self._log.debug(config)
 
         if args['ls']:
-            self._ls(config, args)
+            return self._ls(config, args)
 
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
@@ -48,6 +48,8 @@ class BundleModule(Borg):
             spec = BundleSpec(device, label, config['storage_nodes'][key])
             print("Bundle has the following parts")
             print(spec.parts())
+
+        return True
 
     def _get_bundles(self, path, device_lim=None, label_lim=None):
 
