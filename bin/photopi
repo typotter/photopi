@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 """
-Usage: photopi run [options] [-v ...]
+Usage: photopi run [-v ...]
        photopi bundle ls [options] [-v ...]
        photopi bundle fetch --src=<src_node> [--done --dest=local --move] [options] [-v ...]
        photopi bundle zip [--part=<partnum> --verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest>] [options]
        photopi help
 
 Options:
- --config=file   Specify a path to configuration instead of defaults
- -v              Include verbose logging. Repeating v adds verbosity
- -h, --help      Print help
- --node=node     Specify a node for the action
- --device=device Specify a device for the action
- --label=today   Specify a label for the action
+ --config=file    Specify a path to configuration instead of defaults
+ --node=NODE      Specify a node for the action
+ --device=device  Specify a device for the action
+ --label=today    Specify a label for the action
+ -h, --help       Print help
+ -v               Include verbose logging. Repeating v adds verbosity
 """
 
 import logging

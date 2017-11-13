@@ -184,8 +184,13 @@ class BundleModule(Borg):
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
 
-        if args['--node']:
-            nodes = [{args['--node'], config['storage_nodes'][args['--node']]}]
+        node = args['--node']
+        if node:
+            nodepath = config.storage_node(node)
+            if not nodepath:
+                self._log.warning("node [%s] is not configured", args['--node'])
+                return False
+            nodes = [(node, nodepath)]
         else:
             nodes = config['storage_nodes'].items()
 
