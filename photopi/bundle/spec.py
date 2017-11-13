@@ -13,6 +13,10 @@ class BundleSpec:
         self._label = label
         self._base = base
 
+    def clone(self, base):
+        """ Clones this spec for a different node. """
+        return BundleSpec(self.device, self.label, base)
+
     @property
     def label(self):
         """ The label of this spec. """
@@ -116,7 +120,7 @@ class BundleSpecPart:
         return os.path.isfile(self.donefilename)
 
     def dirname(self):
-        """ Directory where the images in this bundleare stored. """
+        """ Directory where the images in this bundle are stored. """
         return os.path.join(self._base, self.device, self.label,
                             "p{}".format(self.partnum))
 
