@@ -89,9 +89,21 @@ class Configuration():
                 "Configuration file {} was not found".format(
                     filename))
 
+    @property
+    def swap_path(self):
+        """ Path to the swap storage node. """
+        return self.storage_node(node="swap")
+
+    @property
+    def local_path(self):
+        """ Path to the local storage node. """
+        return self.storage_node(node="local")
+
     def storage_node(self, node="local"):
         """ Returns the path for storage node: `node` or None if `node` is not
             defined in the config. """
+        if not node:
+            return None
         if node in self._config['storage_nodes'].keys():
             return self._config['storage_nodes'][node]
         return None

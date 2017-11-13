@@ -32,6 +32,9 @@ class BundleModule(Borg):
         if args['zip']:
             return self._zip(config, args)
 
+        if args['expand']:
+            return self._expand(config, args)
+
     def _buildspec(self, args, config):
         label = args["--label"]
         if not label:
@@ -93,6 +96,56 @@ class BundleModule(Borg):
         stream = open(donefile, "w")
         stream.write(str(lastnum))
         stream.close()
+        return True
+
+    def _expand(self, config, args):
+        spec = self._buildspec(args, config)
+        self._log.info("Expanding %s/%s", spec.device, spec.label)
+
+        archives = spec.archives()
+        self._log.debug("Found %d archives", len(archives))
+
+        extract_dest = os.path.join(config.swap_path, spec.device, spec.label)
+        extract_tmp = os.path.join(extract_dest, "tmp")
+
+        if not os.path.isdir(extract_tmp):
+            os.makedirs(extract_tmp)
+
+        for fname in archives:
+            tarf = tarfile.open(fname, "r:gz")
+
+            # extract
+            self._log.debug("extracting %s", fname)
+            try:
+                tarf.extractall(extract_tmp)
+            except IOError as err:
+                self._log.error("I/O error(%s): %s", err.errno, err.strerror)
+            except EOFError as err:
+                self._log.error("EOF error")
+                self._log.error(err)
+
+        matches = []
+        duplicates = []
+        for root, _, filenames in os.walk(extract_tmp):
+            for filename in fnmatch.filter(filenames, "*.jpg"):
+                dest_fname = os.path.join(extract_dest, filename)
+                src = os.path.join(root, filename)
+                filesize = os.stat(src).st_size
+                if filesize == 0:
+                    self._log.info("%s is empty; skipping", filename)
+                    continue
+                if dest_fname in matches:
+                    self._log.info("duplicate filename: %s", filename)
+                    duplicates.append(src)
+                elif os.path.isfile(dest_fname):
+                    self._log.info("File %s exists, skipping", filename)
+                else:
+                    match = src
+                    shutil.move(match, extract_dest)
+                    matches.append(dest_fname)
+
+        self._log.info("Extracted %d files", len(matches))
+
         return True
 
     def _zip(self, config, args):
@@ -176,10 +229,13 @@ class BundleModule(Borg):
         else:
             destpath = config.storage_node()
 
+        self._log.info("Fetching bundles to %s", destpath)
+
         specs = self._get_specs(bundles, srcpath)
         for spec in specs:
+            fetchdest = os.path.join(destpath, spec.device)
             for fname in spec.archives(done=args['--done']):
-                RsyncCmd(fname, destpath, args['--move']).run()
+                RsyncCmd(fname, fetchdest, args['--move']).run()
 
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
