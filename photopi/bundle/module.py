@@ -46,6 +46,10 @@ class BundleModule(Borg):
             self._log.error("Invalid node")
             return None
 
+        device = args['--device']
+        if not device:
+            device = config.device_id
+
         return BundleSpec(args['--device'], label, srcpath)
 
     def _fragmentimages(self, spec, fragment, maxfiles):
