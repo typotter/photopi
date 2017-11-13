@@ -7,9 +7,9 @@ Usage: photopi run [-v ...]
        photopi help
 
 Options:
- --config=file    Specify a path to configuration instead of defaults
+ --config=FILE    Specify a path to configuration instead of defaults
  --node=NODE      Specify a node for the action
- --device=device  Specify a device for the action
+ --device=DEVICE  Specify a device for the action
  --label=today    Specify a label for the action
  -h, --help       Print help
  -v               Include verbose logging. Repeating v adds verbosity
