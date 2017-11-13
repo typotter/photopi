@@ -62,13 +62,14 @@ class Configuration():
 
     def _validate_config(self):
         verifypaths = [
-            ["storage_nodes", "local"],
-            ["storage_nodes", "swap"]]
+            "device_id",
+            "storage_nodes/local",
+            "storage_nodes/swap"]
 
         for path in verifypaths:
-            if not self._check_deep(self._config, path):
+            if not self._check_deep(self._config, path.split("/")):
                 raise InvalidConfigError(
-                    "Missing config entry for {}".format("/".join(path)))
+                    "Missing config entry for {}".format(path))
 
     def _check_deep(self, obj, keys):
         if not keys:
@@ -98,6 +99,11 @@ class Configuration():
     def local_path(self):
         """ Path to the local storage node. """
         return self.storage_node(node="local")
+
+    @property
+    def device_id(self):
+        """ Device ID as declared in the config. """
+        return self._config['device_id']
 
     def storage_node(self, node="local"):
         """ Returns the path for storage node: `node` or None if `node` is not
