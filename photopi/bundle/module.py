@@ -101,30 +101,28 @@ class BundleModule(Borg):
             return False
         self._log.debug("Zipping Bundle %s/%s", spec.device, spec.label)
 
-        rsync = args["--rsync"]
-
         frag = None
 
-        if args["--next"]:
+        if args['--part']:
+            frag = spec.part_spec(int(args['--part']))
+        else:
             frag = spec.next_part_spec()
             if not self._fragmentimages(spec, frag,
                                         int(args['--maxfilecount'])):
                 self._log.info("no images to move")
-        else:
-            frag = spec.part_spec(int(args['--part']))
 
         newtarname = None
 
         tardest = config.storage_node(args['--dest'])
 
-        if tardest and not rsync:
+        if tardest and not args['--rsync']:
             newtarname = self._altdest(tardest, frag, args["--verifycifs"])
 
         if not newtarname:
             newtarname = frag.tarfilename
 
         if self._zip_files(newtarname, frag):
-            if rsync and tardest:
+            if args['--rsync'] and tardest:
                 self._log.info("Using rsync to move %s to %s",
                                newtarname, tardest)
                 destname = self._altdest(tardest, frag, args["--verifycifs"])
@@ -136,7 +134,7 @@ class BundleModule(Borg):
                     rsynccmd = RsyncCmd.Move(frag.donefilename,
                                              os.path.dirname(destname))
                     rsynccmd.run()
-            elif rsync:
+            elif args['--rsync']:
                 self._log.error(
                     "rsync flag must be used in conjunction with dest")
             return True
