@@ -1,30 +1,38 @@
+""" Defines useful stuff for running `raspistill`. """
+
+import logging
 import os
+import time
+
 from subprocess import Popen, PIPE
 from threading import Thread
 
 class RaspistillCmd(Thread):
+    """ Wrapper class for calling Raspistill. """
 
     def Test(path=None, verbose=False):
-        spec = RaspistillCmd(path=path,
+        """ Take a low quality photo and save it to `test.jpg`. """
+        cmd = RaspistillCmd(path=path,
             output="test.jpg",
             verbose=verbose,
             quality=5)
-        return spec
+        return cmd
 
     def Timelapse(path=None, label=None, interval=None, timeout=None, verbose=True, filestart=None):
+        """ Periodically take photos. """
         if not interval:
             interval = 5000
         if not timeout:
             timeout = 32400000
 
-        spec = RaspistillCmd(
+        cmd = RaspistillCmd(
             path=os.path.join(path, label),
             output="image%06d.jpg",
             interval=interval,
             timeout=timeout,
             verbose=verbose,
             filestart=filestart)
-        return spec
+        return cmd
 
     def __init__(self, label=None, output=None, quality=75, path=None, verbose=False, timeout=None, interval=None, filestart=None):
         Thread.__init__(self)
@@ -38,6 +46,9 @@ class RaspistillCmd(Thread):
         self.verbose = verbose
 
         self._process = None
+
+        self._log = logging.getLogger(
+            "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
 
     def stop(self):
        if self._process is not None:
@@ -66,9 +77,24 @@ class RaspistillCmd(Thread):
 
     def run(self):
         self._process = Popen(self._get_cmd())
-
         self.stdout = self._process.stdout
-
         self.output, self.err = self._process.communicate()
-
         self.returncode = self._process.returncode
+
+    def runandblock(self, callback=None, interval=1):
+        """ Blocking function call to run the `raspistill` command. """
+        self.start()
+        interval = interval if interval else 1
+
+        while True:
+            time.sleep(interval)
+            if callback:
+                callback()
+
+            if not self.is_alive():
+                break
+
+        self._log.info(self.output)
+        self._log.error(self.err)
+
+        return self.returncode == 0
