@@ -1,6 +1,6 @@
 import os, time
 
-from photopi.raspistill.cmd import RaspistillCmd
+from photopi.camera.cmd import RaspistillCmd
 from photopi.core.photopi import get_label_or_default, get_base_dir, get_remote_dir, get_device
 from photopi.timelapse.spec import TimelapseSpec
 
