@@ -238,6 +238,8 @@ class BundleModule(Borg):
         specs = self._get_specs(bundles, srcpath)
         for spec in specs:
             fetchdest = os.path.join(destpath, spec.device)
+            if not os.path.isdir(fetchdest):
+                os.makedirs(fetchdest)
             for fname in spec.archives(done=args['--done']):
                 RsyncCmd(fname, fetchdest, args['--move']).run()
 
@@ -286,16 +288,20 @@ class BundleModule(Borg):
                 specs.append(BundleSpec(device, label, path))
         return specs
 
-    @staticmethod
-    def _get_bundles(path, device_lim=None, label_lim=None):
+    def _get_bundles(self, path, device_lim=None, label_lim=None):
 
         archives = {}
         for root, devices, __ in os.walk(path):
             for device in devices:
-                if device_lim and device != device_lim:
+                self._log.debug(devices)
+                dev = os.path.join(root, device)
+                self._log.debug("Checking %s", dev)
+                if not os.path.isdir(dev) or ( device_lim and device != device_lim ):
                     continue
                 archives[device] = []
+                self._log.debug("Is Dir")
                 for ___, ____, files in os.walk(os.path.join(root, device)):
+                    self._log.debug(files)
                     for filename in fnmatch.filter(files, "*.tar.gz"):
                         label = BundleSort.get_label(filename)
                         if label_lim and label != label_lim:

@@ -1,3 +1,4 @@
+import logging
 import os
 from subprocess import Popen, PIPE
 from threading import Thread
@@ -45,6 +46,11 @@ class RsyncCmd(Cmd):
 
         self._args.append(src)
         self._args.append(dest)
+
+        self._log = logging.getLogger(
+            "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
+
+        self._log.debug("RSync Command: %s", " ".join(self._args))
 
     def _arguments(self):
         return self._args
