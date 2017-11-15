@@ -94,7 +94,9 @@ class RaspistillCmd(Thread):
             if not self.is_alive():
                 break
 
-        self._log.info(self.output)
-        self._log.error(self.err)
+        if self.output:
+            self._log.info(self.output)
+        if self.err:
+            self._log.error(self.err)
 
         return self.returncode == 0

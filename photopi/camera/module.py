@@ -34,6 +34,8 @@ class CameraModule(Borg):
 
         cmd = RaspistillCmd.Test(path=path)
 
+        self._log.info("test image captured")
+
         return cmd.runandblock() == 0
 
 
