@@ -7,9 +7,13 @@ import time
 from subprocess import Popen, PIPE
 from threading import Thread
 
-class RaspistillCmd(Thread):
-    """ Wrapper class for calling Raspistill. """
+from photopi.core.cmd import Cmd
 
+
+class RaspistillCmd(Cmd):
+    """ Class to manage running a `raspistill` command."""
+
+    @staticmethod
     def Test(path=None, verbose=False):
         """ Take a low quality photo and save it to `test.jpg`. """
         cmd = RaspistillCmd(path=path,
@@ -18,8 +22,10 @@ class RaspistillCmd(Thread):
             quality=5)
         return cmd
 
-    def Timelapse(path=None, label=None, interval=None, timeout=None, verbose=True, filestart=None):
-        """ Periodically take photos. """
+    @staticmethod
+    def Continuous(path=None, label=None, interval=None, timeout=None,
+                   verbose=True, filestart=None):
+        """ Continuously take photos. """
         if not interval:
             interval = 5000
         if not timeout:
@@ -34,69 +40,29 @@ class RaspistillCmd(Thread):
             filestart=filestart)
         return cmd
 
-    def __init__(self, label=None, output=None, quality=75, path=None, verbose=False, timeout=None, interval=None, filestart=None):
-        Thread.__init__(self)
-        self.filestart = filestart
-        self.interval = interval
-        self.label = label
-        self.output = output
-        self.path = path
-        self.quality = quality
-        self.timeout = timeout
-        self.verbose = verbose
+    def __init__(self, output=None, quality=75, path=None, verbose=False,
+                 timeout=None, interval=None, filestart=None):
+        Cmd.__init__(self)
 
-        self._process = None
+        self._args = []
+        if output:
+            self._args += ["-o", os.path.join(path, output)]
+        if quality:
+            self._args += ["-q", str(quality)]
+        if verbose:
+            self._args += ["-v"]
+        if interval:
+            self._args += ["-tl", str(interval)]
+        if timeout:
+            self._args += ["-t", str(timeout)]
+        if filestart:
+            self._args += ["-fs", str(filestart)]
 
         self._log = logging.getLogger(
             "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
 
-    def stop(self):
-       if self._process is not None:
-          self._process.kill()
+    def _arguments(self):
+        return self._args
 
-    def __str__(self):
-        return str(self.__dict__)
-
-    def _get_cmd(self):
-        args = []
-        if self.output:
-            args = args + ["-o", os.path.join(self.path, self.output)]
-        if self.quality:
-            args = args + ["-q", str(self.quality)]
-        if self.verbose:
-            args = args + ["-v"]
-        if self.interval:
-            args = args + ["-tl", str(self.interval)]
-        if self.timeout:
-            args = args + ["-t", str(self.timeout)]
-        if self.filestart:
-            args = args + ["-fs", str(self.filestart)]
-
-        cmd = ["raspistill"] + args
-        return cmd
-
-    def run(self):
-        self._process = Popen(self._get_cmd())
-        self.stdout = self._process.stdout
-        self.output, self.err = self._process.communicate()
-        self.returncode = self._process.returncode
-
-    def runandblock(self, callback=None, interval=1):
-        """ Blocking function call to run the `raspistill` command. """
-        self.start()
-        interval = interval if interval else 1
-
-        while True:
-            time.sleep(interval)
-            if callback:
-                callback()
-
-            if not self.is_alive():
-                break
-
-        if self.output:
-            self._log.info(self.output)
-        if self.err:
-            self._log.error(self.err)
-
-        return self.returncode == 0
+    def _cmd(self):
+        return "raspistill"
