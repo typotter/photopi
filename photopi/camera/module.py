@@ -1,10 +1,11 @@
 """ Defines the Module for working the camera. """
 
 import logging
+import os
 
+from photopi.bundle.spec import BundleSpec
 from photopi.camera.cmd import RaspistillCmd
 from photopi.core.borg import Borg
-
 
 class CameraModule(Borg):
     """ Module for working with the camera. """
@@ -21,6 +22,9 @@ class CameraModule(Borg):
         if args['test']:
             return self._test(args, config)
 
+        if args['continuous']:
+            return self._continuous(args, config)
+
         return False
 
     def _test(self, args, config):
@@ -36,7 +40,28 @@ class CameraModule(Borg):
 
         self._log.info("test image captured")
 
-        return cmd.runandblock() == 0
+        return cmd.run()
 
+    def _continuous(self, args, config):
+        # build a bundle for the continuouse shooting.
+        bundle = BundleSpec.FromArgsAndConfig(args, config)
+        self._log.debug(bundle)
+
+        lastimage = bundle.last_image_number()
+        if lastimage == -1:
+            leadoff = 0
+        else:
+            leadoff = 100 - (lastimage % 100) + lastimage
+
+        cmd = RaspistillCmd.Continuous(
+            label=bundle.label,
+            path=os.path.join(bundle.path),
+            interval=args['--interval'],
+            timeout=args['--timeout'],
+            filestart=leadoff)
+
+        os.makedirs(bundle.path, exist_ok=True)
+
+        return cmd.run()
 
 MODULE = ("camera", CameraModule)

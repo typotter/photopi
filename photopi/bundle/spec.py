@@ -1,4 +1,5 @@
 """ Defines classes to interact with Bundles. """
+from datetime import datetime
 import glob
 import logging
 import os
@@ -17,11 +18,12 @@ class BundleSpec:
             log.error("Invalid node")
             return None
 
+
         device = args['--device']
         if not device:
             device = config.device_id
 
-        return BundleSpec(args['--device'], label, srcpath)
+        return BundleSpec(device, label, srcpath)
 
 
     """ The group of images with the same label. """
@@ -31,6 +33,9 @@ class BundleSpec:
         self._device = device
         self._label = label
         self._base = base
+
+    def __str__(self):
+        return '{}/{}/{}'.format(self._base, self._device, self._label)
 
     def clone(self, base):
         """ Clones this spec for a different node. """
@@ -50,6 +55,11 @@ class BundleSpec:
         """ Gets the spec for the bundle fragment. """
         return BundleSpecPart(
             self.device, self.label, partnum, self._base, self)
+
+    @property
+    def path(self):
+        """ The path where images for this bundle are located. """
+        return os.path.join(self._base, self._device, self._label)
 
     def last_part_spec(self):
         """ Gets the last fragment of this bundle. """
@@ -102,6 +112,16 @@ class BundleSpec:
         if not parts:
             return 0
         return parts[-1]
+
+    def last_image_number(self):
+        """ Last image number in the bundle. """
+        if self.last_part_number() == 0:
+            images = self.images()
+            if images:
+                return BundleSort.image_number(images[-1])
+            return -1
+        return self.last_part_spec().last_image_number()
+
 
     def images(self, part=None):
         """ List the images for this bundle. """
@@ -164,12 +184,12 @@ class BundleSpecPart:
         if images:
             return BundleSort.image_number(images[-1])
         if self.partnum == 0:
-            return 0
+            return -1
         prevpart = self.parent.part_spec(self.partnum - 1)
         if prevpart is not None:
             return prevpart.get_last_image_number()
 
-        return None
+        return -1
 
 
 class BundleSort:
