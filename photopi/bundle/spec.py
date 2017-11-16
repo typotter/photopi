@@ -5,6 +5,25 @@ import os
 import re
 
 class BundleSpec:
+    def FromArgsAndConfig(args, config):
+        log = logging.getLogger("BundleSpec.FromArgsAndConfig")
+        label = args["--label"]
+        if not label:
+            label = datetime.now().strftime("%Y-%m-%d")
+
+        node = args["--node"] if args["--node"] else "local"
+        srcpath = config.storage_node(node)
+        if srcpath is None:
+            log.error("Invalid node")
+            return None
+
+        device = args['--device']
+        if not device:
+            device = config.device_id
+
+        return BundleSpec(args['--device'], label, srcpath)
+
+
     """ The group of images with the same label. """
     def __init__(self, device, label, base):
         self._log = logging.getLogger(
