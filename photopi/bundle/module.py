@@ -35,23 +35,6 @@ class BundleModule(Borg):
         if args['expand']:
             return self._expand(config, args)
 
-    def _buildspec(self, args, config):
-        label = args["--label"]
-        if not label:
-            label = datetime.now().strftime("%Y-%m-%d")
-
-        node = args["--node"] if args["--node"] else "local"
-        srcpath = config.storage_node(node)
-        if srcpath is None:
-            self._log.error("Invalid node")
-            return None
-
-        device = args['--device']
-        if not device:
-            device = config.device_id
-
-        return BundleSpec(args['--device'], label, srcpath)
-
     def _fragmentimages(self, spec, fragment, maxfiles):
         self._log.info("Moving image files for zip")
 
@@ -103,7 +86,7 @@ class BundleModule(Borg):
         return True
 
     def _expand(self, config, args):
-        spec = self._buildspec(args, config)
+        spec = BundleSpec.FromArgsAndConfig(args, config)
         self._log.info("Expanding %s/%s", spec.device, spec.label)
 
         archives = spec.archives()
@@ -153,7 +136,7 @@ class BundleModule(Borg):
         return True
 
     def _zip(self, config, args):
-        spec = self._buildspec(args, config)
+        spec = BundleSpec.FromArgsAndConfig(args, config)
         if not spec:
             return False
         self._log.debug("Zipping Bundle %s/%s", spec.device, spec.label)
