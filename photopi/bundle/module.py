@@ -147,8 +147,8 @@ class BundleModule(Borg):
             frag = spec.part_spec(int(args['--part']))
         else:
             frag = spec.next_part_spec()
-            if not self._fragmentimages(spec, frag,
-                                        int(args['--maxfilecount'])):
+            maxfiles = int(args['--maxfilecount']) if args['--maxfilecount'] else 1000
+            if not self._fragmentimages(spec, frag, maxfiles):
                 self._log.info("no images to move")
 
         newtarname = None
