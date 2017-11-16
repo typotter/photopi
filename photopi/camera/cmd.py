@@ -32,7 +32,7 @@ class RaspistillCmd(Cmd):
             timeout = 32400000
 
         cmd = RaspistillCmd(
-            path=os.path.join(path, label),
+            path=path,
             output="image%06d.jpg",
             interval=interval,
             timeout=timeout,

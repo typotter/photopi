@@ -45,7 +45,6 @@ class CameraModule(Borg):
     def _continuous(self, args, config):
         # build a bundle for the continuouse shooting.
         bundle = BundleSpec.FromArgsAndConfig(args, config)
-        self._log.debug(bundle)
 
         lastimage = bundle.last_image_number()
         if lastimage == -1:
@@ -53,9 +52,11 @@ class CameraModule(Borg):
         else:
             leadoff = 100 - (lastimage % 100) + lastimage
 
+        self._log.debug("raspistill starting at %d", leadoff)
+
         cmd = RaspistillCmd.Continuous(
             label=bundle.label,
-            path=os.path.join(bundle.path),
+            path=bundle.path,
             interval=args['--interval'],
             timeout=args['--timeout'],
             filestart=leadoff)
