@@ -274,23 +274,22 @@ class BundleModule(Borg):
     def _get_bundles(self, path, device_lim=None, label_lim=None):
 
         archives = {}
-        for root, devices, __ in os.walk(path):
-            for device in devices:
-                self._log.debug(devices)
-                dev = os.path.join(root, device)
-                self._log.debug("Checking %s", dev)
-                if not os.path.isdir(dev) or ( device_lim and device != device_lim ):
-                    continue
-                archives[device] = []
-                self._log.debug("Is Dir")
-                for ___, ____, files in os.walk(os.path.join(root, device)):
-                    self._log.debug(files)
-                    for filename in fnmatch.filter(files, "*.tar.gz"):
-                        label = BundleSort.get_label(filename)
-                        if label_lim and label != label_lim:
-                            continue
-                        if label not in archives[device]:
-                            archives[device].append(label)
+        for device in os.listdir(path):
+            self._log.debug(device)
+            dev = os.path.join(path, device)
+            self._log.debug("Checking %s", dev)
+            if not os.path.isdir(dev) or (device_lim and device != device_lim):
+                continue
+            archives[device] = []
+            self._log.debug("Is Dir")
+            for _, _, files in os.walk(os.path.join(path, device)):
+                self._log.debug(files)
+                for filename in fnmatch.filter(files, "*.tar.gz"):
+                    label = BundleSort.get_label(filename)
+                    if label_lim and label != label_lim:
+                        continue
+                    if label not in archives[device]:
+                        archives[device].append(label)
 
         return archives
 
