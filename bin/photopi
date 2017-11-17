@@ -6,12 +6,18 @@ Usage: photopi run [-v ...]
        photopi bundle zip [--part=<partnum> --verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest>] [options] [-v ...]
        photopi camera ( test | continuous ) [options] [-v ...]
 <<<<<<< HEAD
+<<<<<<< HEAD
        photopi bundle expand [options] [-v ...]
 =======
+=======
+>>>>>>> specifying option that's also listed in [options] ruins it for everyone
 <<<<<<< HEAD
        photopi bundle expand --device=<device> [options] [-v ...]
 >>>>>>> specifying option that's also listed in [options] ruins it for everyone
        photopi timelapse [options] [-v ...]
+=======
+       photopi bundle expand [options] [-v ...]
+>>>>>>> specifying option that's also listed in [options] ruins it for everyone
 =======
        photopi bundle expand [options] [-v ...]
 >>>>>>> specifying option that's also listed in [options] ruins it for everyone
