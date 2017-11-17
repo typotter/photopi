@@ -241,8 +241,9 @@ class BundleModule(Borg):
 
         bundles = {}
         for key, path in nodes:
-            bundles[key] = self._get_bundles(path, args['--device'],
-                                             args['--label'])
+            if os.path.isdir(path):
+                bundles[key] = self._get_bundles(path, args['--device'],
+                                                 args['--label'])
 
         self._log.debug("bundles found %s", bundles)
 
