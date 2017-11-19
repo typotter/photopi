@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import tarfile
+import zlib
 
 from photopi.core.borg import Borg
 from photopi.core.cmd import RsyncCmd
@@ -103,16 +104,23 @@ class BundleModule(Borg):
             os.makedirs(extract_tmp)
 
         for fname in archives:
-            tarf = tarfile.open(fname, "r:gz")
-
-            # extract
-            self._log.debug("extracting %s", fname)
             try:
+                tarf = tarfile.open(fname, "r:gz")
+
+                # extract
+                self._log.debug("extracting %s", fname)
+
                 tarf.extractall(extract_tmp)
             except IOError as err:
                 self._log.error("I/O error(%s): %s", err.errno, err.strerror)
             except EOFError as err:
                 self._log.error("EOF error")
+                self._log.error(err)
+            except zlib.error as err:
+                self._log.error("error")
+                self._log.error(err)
+            except tarfile.ReadError as err:
+                self._log.error("error")
                 self._log.error(err)
 
         matches = []
