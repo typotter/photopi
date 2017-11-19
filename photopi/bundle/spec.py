@@ -154,6 +154,15 @@ class BundleSpecPart:
         """ Filename for marking this fragment as complete. """
         return self._fname(".{}.done")
 
+    @staticmethod
+    def donefile_from_tarname(tarname):
+        return ".{}.done".format(BundleSpecPart.filebase(tarname))
+
+    @staticmethod
+    def filebase(fname):
+        match = re.search(r'\.?(.+)\.(tar\.gz)|(done)', fname)
+        return int(match.group(1))
+
     def is_done(self):
         """ Indicates whether this fragment's archive has been written. """
         return os.path.isfile(self.donefilename)
