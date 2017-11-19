@@ -3,9 +3,9 @@
 Usage: photopi run [-v ...]
        photopi bundle ls [options] [-v ...]
        photopi bundle fetch --src=<src_node> [--done --dest=local --move] [options] [-v ...]
-       photopi bundle zip [--part=<partnum> --verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest> --device=<device>] [options] [-v ...]
+       photopi bundle zip [--part=<partnum> --verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest>] [options] [-v ...]
        photopi camera ( test | continuous ) [options] [-v ...]
-       photopi bundle expand --device=<device> [options] [-v ...]
+       photopi bundle expand [options] [-v ...]
        photopi timelapse [options] [-v ...]
        photopi help
 
