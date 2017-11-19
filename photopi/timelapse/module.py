@@ -52,7 +52,7 @@ class TimelapseModule(Borg):
             nodes = sorted(list(bundles.keys()))
             if not nodes:
                 self._log.info("No nodes reachable. Exiting")
-                return True
+                continue
             elif len(nodes) > 1:
                 node = _prompt("Select Node> ", nodes)
             else:
@@ -61,7 +61,7 @@ class TimelapseModule(Borg):
             devices = sorted(bundles[node])
             if not devices:
                 self._log.info("No devices. Exiting")
-                return True
+                continue
             elif len(devices) > 1:
                 device = _prompt("Select Device> ", devices)
             else:
@@ -70,7 +70,7 @@ class TimelapseModule(Borg):
             labels = sorted(bundles[node][device])
             if not labels:
                 self._log.info("No bundles. Exiting")
-                return True
+                continue
             elif len(labels) > 1:
                 label = _prompt("Select Label> ", labels)
             else:
