@@ -225,6 +225,8 @@ class BundleModule(Borg):
                 os.makedirs(fetchdest)
             for fname in spec.archives(done=args['--done']):
                 RsyncCmd(fname, fetchdest, args['--move']).run()
+                donefile = BundleSpec.donefile_from_tarname(fname)
+                RsyncCmd(donefile, fetchdest, args['--move']).run()
 
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
