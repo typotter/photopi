@@ -6,6 +6,7 @@ Usage: photopi run [-v ...]
        photopi bundle zip [--part=<partnum> --verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest> --device=<device>] [options] [-v ...]
        photopi camera ( test | continuous ) [options] [-v ...]
        photopi bundle expand --device=<device> [options] [-v ...]
+       photopi timelapse [options] [-v ...]
        photopi help
 
 Options:
@@ -28,6 +29,7 @@ import docopt
 
 import photopi.bundle.module
 import photopi.camera.module
+import photopi.timelapse.module
 from photopi.core.config import Configuration, InvalidConfigError
 
 def setup_logging(root_verbose=False, app_verbose=False):
@@ -70,7 +72,8 @@ def do_run(args):
     return True
 
 MAINMODS = [photopi.bundle.module.MODULE,
-    photopi.camera.module.MODULE]
+    photopi.camera.module.MODULE,
+    photopi.timelapse.module.MODULE]
 
 def main():
     """ Main routine for the application. """

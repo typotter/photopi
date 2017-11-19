@@ -105,6 +105,11 @@ class Configuration():
         """ Device ID as declared in the config. """
         return self._config['device_id']
 
+    @property
+    def storage_nodes(self):
+        """ Storage Nodes declared in the config. """
+        return self._config['storage_nodes']
+
     def storage_node(self, node="local"):
         """ Returns the path for storage node: `node` or None if `node` is not
             defined in the config. """

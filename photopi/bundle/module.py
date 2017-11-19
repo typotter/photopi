@@ -87,6 +87,10 @@ class BundleModule(Borg):
 
     def _expand(self, config, args):
         spec = BundleSpec.FromArgsAndConfig(args, config)
+        self.expand(spec, config)
+
+    def expand(self, spec, config):
+        """ Expand the archives for the specified bundle to swap storage. """
         self._log.info("Expanding %s/%s", spec.device, spec.label)
 
         archives = spec.archives()
@@ -228,9 +232,10 @@ class BundleModule(Borg):
                 donefile = BundleSpec.donefile_from_tarname(fname)
                 RsyncCmd(donefile, fetchdest, args['--move']).run()
 
-    def _ls(self, config, args):
-        """ List the bundles accessible by this node."""
-
+    def filter_bundles(self, args, config):
+        """
+        Dict of node-device-labels for bundles matching criteria in args.
+        """
         node = args['--node']
         if node:
             nodepath = config.storage_node(node)
@@ -242,12 +247,18 @@ class BundleModule(Borg):
             nodes = config['storage_nodes'].items()
 
         bundles = {}
-        for key, path in nodes:
+        for key, path in sorted(nodes):
             if os.path.isdir(path):
                 bundles[key] = self._get_bundles(path, args['--device'],
                                                  args['--label'])
 
         self._log.debug("bundles found %s", bundles)
+        return bundles
+
+    def _ls(self, config, args):
+        """ List the bundles accessible by this node."""
+
+        bundles = self.filter_bundles(args, config)
 
         tupled = []
         for key, bundle in bundles.items():
@@ -277,7 +288,7 @@ class BundleModule(Borg):
     def _get_bundles(self, path, device_lim=None, label_lim=None):
 
         archives = {}
-        for device in os.listdir(path):
+        for device in sorted(os.listdir(path)):
             self._log.debug(device)
             dev = os.path.join(path, device)
             self._log.debug("Checking %s", dev)
