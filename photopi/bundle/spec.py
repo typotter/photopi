@@ -160,8 +160,9 @@ class BundleSpecPart:
 
     @staticmethod
     def filebase(fname):
-        match = re.search(r'\.?(.+)\.(tar\.gz)|(done)', fname)
-        return int(match.group(1))
+        fname = os.path.basename(fname)
+        match = re.search(r'\.?(.+)\..?(tar\.gz)|(done)', fname)
+        return match.group(1)
 
     def is_done(self):
         """ Indicates whether this fragment's archive has been written. """

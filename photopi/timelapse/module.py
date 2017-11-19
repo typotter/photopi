@@ -12,6 +12,7 @@ from photopi.bundle.module import BundleModule
 
 
 def _prompt(prompt, options):
+    options = sorted(options)
     result = None
     rng = range(len(options))
     while result is None or result not in rng:
@@ -30,11 +31,15 @@ class TimelapseModule(Borg):
         Borg.__init__(self)
         self._log = logging.getLogger(
             "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
+        self._bundlemod = BundleModule()
 
     def main(self, args, config):
         """ Main method. """
         spec = BundleSpec.FromArgsAndConfig(args, config)
         self._log.debug("Timelapse Module for %s", spec)
+
+        if args['move']:
+            return self._movearchives(spec, args, config)
 
         return self._suite(args, config)
 
@@ -44,10 +49,9 @@ class TimelapseModule(Borg):
             self._log.debug(args)
             self._log.debug(config)
 
-            bundle_mod = BundleModule()
-            bundles = bundle_mod.filter_bundles(args, config)
+            bundles = self._bundlemod.filter_bundles(args, config)
 
-            self._log.info(bundles)
+            self._log.debug(bundles)
 
             nodes = sorted(list(bundles.keys()))
             if not nodes:
@@ -80,7 +84,7 @@ class TimelapseModule(Borg):
 
             print("Processing {}/{}/{}".format(node, device, label))
 
-            loaded = bundle_mod.expand(bundle, config)
+            loaded = self._bundlemod.expand(bundle, config)
 
             if not loaded:
                 self._log.error("Unable to load")
@@ -110,10 +114,20 @@ class TimelapseModule(Borg):
             while not cmd.is_alive():
                 time.sleep(1)
 
-            cont = input("timelapse complete. Another? Y/n")
-            done = cont == "y" or cont == "Y"
+            move = input("timelapse complete. Move archives? Y/n")
+            if move in ["y", "Y"]:
+                self._movearchives(bundle, config)
+
+            cont = input("Process another? Y/n")
+            done = cont in ["y", "Y"]
 
         return True
+
+    def _movearchives(self, bundle, config):
+        destnode = _prompt("Select destination node> ",
+                           list(config.storage_nodes.keys()))
+        destpath = config.storage_node(destnode)
+        return self._bundlemod.fetch(bundle, destpath, move=True)
 
 
 MODULE = ("timelapse", TimelapseModule)
