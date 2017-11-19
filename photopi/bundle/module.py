@@ -10,7 +10,7 @@ import zlib
 
 from photopi.core.borg import Borg
 from photopi.core.cmd import RsyncCmd
-from photopi.bundle.spec import BundleSort, BundleSpec
+from photopi.bundle.spec import BundleSort, BundleSpec, BundleSpecPart
 
 class BundleModule(Borg):
     """ Module for working with bundles of images. """
@@ -88,7 +88,7 @@ class BundleModule(Borg):
 
     def _expand(self, config, args):
         spec = BundleSpec.FromArgsAndConfig(args, config)
-        self.expand(spec, config)
+        return self.expand(spec, config)
 
     def expand(self, spec, config):
         """ Expand the archives for the specified bundle to swap storage. """
@@ -207,6 +207,27 @@ class BundleModule(Borg):
             self._log.error("Warning. Expected mount path is not mounted.")
             return None
 
+    def fetch(self, bundles, destpath, done=False, move=False):
+        """ Moves archives in bundle(s) to `dest`. """
+        if isinstance(bundles, BundleSpec):
+            bundles = [bundles]
+
+        self._log.debug(bundles)
+
+        self._log.info("Fetching bundles to %s", destpath)
+
+        for spec in bundles:
+            fetchdest = os.path.join(destpath, spec.device)
+            if not os.path.isdir(fetchdest):
+                os.makedirs(fetchdest)
+            for fname in spec.archives(done=done):
+                RsyncCmd(fname, fetchdest, move).run()
+                if done:
+                    donefile = BundleSpecPart.donefile_from_tarname(fname)
+                    RsyncCmd(donefile, fetchdest, move).run()
+
+        return True
+
     def _fetch(self, config, args):
         srcnode = args['--src']
         self._log.info("Fetching bundles from %s", srcnode)
@@ -216,29 +237,19 @@ class BundleModule(Borg):
             self._log.error("Invalid src node")
             return False
 
-        bundles = self._get_bundles(srcpath, args['--device'], args['--label'])
-
-        self._log.debug(bundles)
-
-        if args['--dest']:
-            destpath = config.storage_node(args['--dest'])
+        dest = args['--dest']
+        if dest:
+            destpath = config.storage_node(dest)
             if destpath is None:
                 self._log.error("Invalid dest node")
                 return False
-        else:
-            destpath = config.storage_node()
 
-        self._log.info("Fetching bundles to %s", destpath)
+        bundles = self._get_bundles(srcpath, args['--device'], args['--label'])
 
         specs = self._get_specs(bundles, srcpath)
-        for spec in specs:
-            fetchdest = os.path.join(destpath, spec.device)
-            if not os.path.isdir(fetchdest):
-                os.makedirs(fetchdest)
-            for fname in spec.archives(done=args['--done']):
-                RsyncCmd(fname, fetchdest, args['--move']).run()
-                donefile = BundleSpec.donefile_from_tarname(fname)
-                RsyncCmd(donefile, fetchdest, args['--move']).run()
+
+        return self.fetch(specs, destpath,
+                          done=args['--done'], move=args['--move'])
 
     def filter_bundles(self, args, config):
         """
