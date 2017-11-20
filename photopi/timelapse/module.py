@@ -41,7 +41,58 @@ class TimelapseModule(Borg):
         if args['move']:
             return self._movearchives(spec, args, config)
 
+        if args['auto']:
+            return self._autosuite(args, config)
+
         return self._suite(args, config)
+
+    def _autosuite(self, args, config):
+        destnode = args['--dest']
+
+        destpath = config.storage_node(destnode)
+        if destpath is None:
+            self._log.error("Invalid dest node")
+            return False
+
+        if not config.storage_node(args['--node']):
+            self._log.info("Invalid source node")
+            return False
+
+        bundles = self._bundlemod.filter_bundles(args, config)
+
+        specs = []
+        path = config.storage_node(args['--node'])
+        for device, labels in bundles[args['--node']].items():
+            for label in sorted(labels):
+                specs.append(BundleSpec(device, label, path))
+
+        self._log.info(specs)
+
+        for spec in specs:
+            self._log.info("Loading %s", spec)
+            self._bundlemod.expand(spec, config)
+
+            fname = input("Enter timelapse name for {}/{} > ".format(
+                          spec.device, spec.label))
+
+            dest_avi = os.path.join(destpath,
+                                    "{}-{}-timelapse-{}.avi".format(
+                                        spec.label, spec.device, fname))
+
+            self._log.info("Writing %s", dest_avi)
+
+            loadedpath = os.path.join(config.swap_path, spec.device,
+                                      spec.label)
+
+            cmd = MencoderCmd.AllFiles(loadedpath, dest_avi)
+            cmd.start()
+
+            while not cmd.is_alive():
+                time.sleep(1)
+
+            move = input("timelapse complete. Move archives? Y/n")
+            if move in ["y", "Y"]:
+                self._movearchives(spec, config)
 
     def _suite(self, args, config):
         done = False
