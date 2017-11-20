@@ -197,7 +197,7 @@ class BundleSpecPart:
             return -1
         prevpart = self.parent.part_spec(self.partnum - 1)
         if prevpart is not None:
-            return prevpart.get_last_image_number()
+            return prevpart.last_image_number()
 
         return -1
 
