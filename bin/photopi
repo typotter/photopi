@@ -7,7 +7,7 @@ Usage: photopi run [-v ...]
        photopi camera ( test | continuous ) [options] [-v ...]
        photopi bundle expand [options] [-v ...]
        photopi timelapse [options] [-v ...]
-       photopi timelapse auto --dest=<dest> --node=<node> [options] [-v ...]
+       photopi timelapse auto --dest=<dest> [options] [-v ...]
        photopi timelapse move [options] [-v ...]
        photopi help
 
