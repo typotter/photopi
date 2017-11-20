@@ -223,7 +223,9 @@ class BundleModule(Borg):
             for fname in spec.archives(done=done):
                 RsyncCmd(fname, fetchdest, move).run()
                 if done:
-                    donefile = BundleSpecPart.donefile_from_tarname(fname)
+                    donefile = os.path.join(
+                        os.path.dirname(fname), 
+                        BundleSpecPart.donefile_from_tarname(fname))
                     RsyncCmd(donefile, fetchdest, move).run()
 
         return True
@@ -237,12 +239,11 @@ class BundleModule(Borg):
             self._log.error("Invalid src node")
             return False
 
-        dest = args['--dest']
-        if dest:
-            destpath = config.storage_node(dest)
-            if destpath is None:
-                self._log.error("Invalid dest node")
-                return False
+        destpath = config.storage_node(
+            args['--dest'] if args['--dest'] else "local")
+        if destpath is None:
+            self._log.error("Invalid dest node")
+            return False
 
         bundles = self._get_bundles(srcpath, args['--device'], args['--label'])
 
