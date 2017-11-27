@@ -130,7 +130,6 @@ class BundleSpec:
                                    "image*.jpg")
         else:
             pattern = os.path.join(self.device, self.label, "image*.jpg")
-        self._log.debug(os.path.join(self._base, pattern))
         images = glob.glob(os.path.join(self._base, pattern))
         return sorted(images, key=BundleSort.image_number)
 
