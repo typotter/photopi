@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import os
+import shutil
 import time
 
 from photopi.core.borg import Borg
@@ -9,6 +10,8 @@ from photopi.timelapse.spec import TimelapseSpec
 from photopi.timelapse.cmd import MencoderCmd
 from photopi.bundle.spec import BundleSpec
 from photopi.bundle.module import BundleModule
+
+_YESOPTS = ["y", "Y", ""]
 
 
 def _prompt(prompt, options):
@@ -39,7 +42,7 @@ class TimelapseModule(Borg):
         self._log.debug("Timelapse Module for %s", spec)
 
         if args['move']:
-            return self._movearchives(spec, args, config)
+            return self._movearchives(spec, config)
 
         if args['auto']:
             return self._autosuite(args, config)
@@ -72,12 +75,14 @@ class TimelapseModule(Borg):
             self._log.info("Loading %s", spec)
             self._bundlemod.expand(spec, config)
 
-            fname = input("Enter timelapse name for {}/{} > ".format(
+            dest_avi = os.path.join(destpath,
+                                    "{}-{}-timelapse.avi".format(
+                                        spec.label, spec.device))
+
+
+            input("hit <enter> when ready to encode: {}/{}> ".format(
                           spec.device, spec.label))
 
-            dest_avi = os.path.join(destpath,
-                                    "{}-{}-timelapse-{}.avi".format(
-                                        spec.label, spec.device, fname))
 
             self._log.info("Writing %s", dest_avi)
 
@@ -87,8 +92,16 @@ class TimelapseModule(Borg):
             cmd = MencoderCmd.AllFiles(loadedpath, dest_avi)
             cmd.start()
 
-            while not cmd.is_alive():
+            while cmd.is_alive():
                 time.sleep(1)
+
+            fname = input("Enter timelapse name for {}/{} > ".format(
+                          spec.device, spec.label))
+
+            finalfname = os.path.join(destpath,
+                                      "{}-{}-timelapse-{}.avi".format(
+                                          spec.label, spec.device, fname))
+            shutil.move(dest_avi, finalfname)
 
             move = input("timelapse complete. Move archives? Y/n")
             if move in ["y", "Y"]:
@@ -166,11 +179,11 @@ class TimelapseModule(Borg):
                 time.sleep(1)
 
             move = input("timelapse complete. Move archives? Y/n")
-            if move in ["y", "Y"]:
+            if move in _SELFOPTS:
                 self._movearchives(bundle, config)
 
             cont = input("Process another? Y/n")
-            done = cont in ["y", "Y"]
+            done = cont in _YESOPTS
 
         return True
 
