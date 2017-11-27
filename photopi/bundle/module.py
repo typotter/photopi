@@ -31,6 +31,8 @@ class BundleModule(Borg):
             return self._fetch(config, args)
 
         if args['zip']:
+            if args['orphans']:
+                return self._ziporphans(config, args)
             return self._zip(config, args)
 
         if args['expand']:
@@ -147,16 +149,54 @@ class BundleModule(Borg):
 
         return True
 
+    def _ziporphans(self, config, args):
+        nodes = self._nodelist(args, config)
+        if not nodes:
+            return False
+
+        device_lim = args['--device']
+        label_lim = args['--label']
+
+        for key, path in sorted(nodes):
+            for device in sorted(os.listdir(path)):
+                dev = os.path.join(path, device)
+                if not os.path.isdir(dev) or (device_lim and device != device_lim):
+                    continue
+
+                for label in sorted(os.listdir(dev)):
+                    ldir = os.path.join(dev, label)
+                    if not os.path.isdir(ldir) or (label_lim and label != label_lim):
+                        continue
+                    spec = BundleSpec(device, label, path)
+
+                    for p in spec.parts():
+                        part = spec.part_spec(p)
+
+                        if len(part.images()) > 0:
+                            self._log.info("Zip %s/%s/%s", device, label, p)
+                            self._zipster(spec, args, config, part=p)
+
+                    if len(spec.images()) > 0:
+                        self._log.info("Zip new bundle %s/%s",
+                                       device, label)         
+                        self._zipster(spec, args, config)       
+        return True  
+  
+
     def _zip(self, config, args):
         spec = BundleSpec.FromArgsAndConfig(args, config)
         if not spec:
             return False
         self._log.debug("Zipping Bundle %s/%s", spec.device, spec.label)
 
+
+        return self._zipster(spec, args, config, part=args['--part'])
+
+    def _zipster(self, spec, args, config, part=None):
         frag = None
 
-        if args['--part']:
-            frag = spec.part_spec(int(args['--part']))
+        if part:
+            frag = spec.part_spec(int(part))
         else:
             frag = spec.next_part_spec()
             maxfiles = int(args['--maxfilecount']) if args['--maxfilecount'] else 1000
@@ -256,15 +296,9 @@ class BundleModule(Borg):
         """
         Dict of node-device-labels for bundles matching criteria in args.
         """
-        node = args['--node']
-        if node:
-            nodepath = config.storage_node(node)
-            if not nodepath:
-                self._log.warning("node [%s] is not configured", args['--node'])
-                return False
-            nodes = [(node, nodepath)]
-        else:
-            nodes = config['storage_nodes'].items()
+        nodes = self._nodelist(args, config)
+        if not nodes:
+            return False
 
         bundles = {}
         for key, path in sorted(nodes):
@@ -274,6 +308,18 @@ class BundleModule(Borg):
 
         self._log.debug("bundles found %s", bundles)
         return bundles
+
+    def _nodelist(self, args, config):
+        """ List of (nodename, nodepath) tuples. """
+        node = args['--node']
+        if node:
+            nodepath = config.storage_node(node)
+            if not nodepath:
+                self._log.warning("node [%s] is not configured", args['--node'])
+                return None
+            return [(node, nodepath)]
+
+        return config['storage_nodes'].items()
 
     def _ls(self, config, args):
         """ List the bundles accessible by this node."""
