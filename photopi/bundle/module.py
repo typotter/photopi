@@ -193,6 +193,10 @@ class BundleModule(Borg):
         return self._zipster(spec, args, config, part=args['--part'])
 
     def _zipster(self, spec, args, config, part=None):
+        if args['--dry']:
+            self._log.info("Not zipping; dry run %s/%s", spec, part)
+            return True
+
         frag = None
 
         if part:
