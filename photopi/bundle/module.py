@@ -176,10 +176,10 @@ class BundleModule(Borg):
                             self._log.info("Zip %s/%s/%s", device, label, p)
                             self._zipster(spec, args, config, part=p)
 
-                    if len(spec.images()) > 0:
+                    while len(spec.images()) > 0:
                         self._log.info("Zip new bundle %s/%s",
                                        device, label)         
-                        self._zipster(spec, args, config)       
+                        self._zipster(spec, args, config)
         return True  
   
 
