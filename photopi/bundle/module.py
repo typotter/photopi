@@ -335,7 +335,7 @@ class BundleModule(Borg):
             print(key)
             for device, labels in bundle.items():
                 print("\t{}".format(device))
-                for label in labels:
+                for label in sorted(labels):
                     print("\t\t{}".format(label))
                     tupled.append((key, device, label))
 
