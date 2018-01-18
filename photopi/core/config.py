@@ -119,6 +119,9 @@ class Configuration():
             return self._config['storage_nodes'][node]
         return None
 
+    def workflow(self, wfname):
+        return self._config['workflows'][wfname]
+
     def __str__(self):
         return str(self._config)
 
