@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 Usage: photopi run [-v ...]
+       photopi work --workflow=<workflow> [options] [-v ...]
        photopi bundle ls [options] [-v ...]
        photopi bundle fetch --src=<src_node> [--done --dest=local --move] [options] [-v ...]
        photopi bundle zip [--part=<partnum> --verifycifs --rsync --maxfilecount=<maxfiles> --dest=<dest>] [options] [-v ...]
@@ -81,6 +82,7 @@ MAINMODS = [photopi.bundle.module.MODULE,
 def main():
     """ Main routine for the application. """
     args = docopt.docopt(__doc__)
+    prefs = None
     if args['-v']:
         if args['-v'] > 1:
             setup_logging(True, True)
@@ -99,11 +101,42 @@ def main():
         log.error(err)
         return False
 
+    # See if there's a workflow
+    if args['work']:
+        workflow = config.workflow(args['--workflow'])
+        print(workflow)
+
+        if not workflow:
+            log.error("Workflow %s not specified", args['--workflow'])
+            return False
+
+        if not workflow['module']:
+            log.error("No module specified for workflow: %s",
+                      args['--workflow'])
+            return False
+
+
+
+        if not workflow['action']:
+            log.error("No action specified for workflow: %s",
+                      args['--workflow'])
+            return False
+
+        args[workflow['module']] = True
+        args[workflow['action']] = True
+        prefs = workflow['prefs']
+        for key, val in workflow['args'].items():
+            args[key] = val
+
     # Try modules
     for modcmd, injector in MAINMODS:
         if args[modcmd]:
             log.info("Running %s module", modcmd)
-            return injector().main(args, config)
+            return injector().main(args, config, prefs=prefs)
+
+    if args['work']:
+        log.error("Module %s does not exist", workflow['module'])
+        return False
 
     return False
 
