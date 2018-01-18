@@ -36,7 +36,7 @@ class TimelapseModule(Borg):
             "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
         self._bundlemod = BundleModule()
 
-    def main(self, args, config):
+    def main(self, args, config, prefs=None):
         """ Main method. """
         spec = BundleSpec.FromArgsAndConfig(args, config)
         self._log.debug("Timelapse Module for %s", spec)
@@ -45,11 +45,11 @@ class TimelapseModule(Borg):
             return self._movearchives(spec, config)
 
         if args['auto']:
-            return self._autosuite(args, config)
+            return self._autosuite(args, config, prefs)
 
         return self._suite(args, config)
 
-    def _autosuite(self, args, config):
+    def _autosuite(self, args, config, prefs):
         destnode = args['--dest']
 
         destpath = config.storage_node(destnode)
@@ -79,9 +79,9 @@ class TimelapseModule(Borg):
                                     "{}-{}-timelapse.avi".format(
                                         spec.label, spec.device))
 
-
-            input("hit <enter> when ready to encode: {}/{}> ".format(
-                          spec.device, spec.label))
+            if not prefs:
+                input("hit <enter> when ready to encode: {}/{}> ".format(
+                              spec.device, spec.label))
 
 
             self._log.info("Writing %s", dest_avi)
@@ -95,17 +95,26 @@ class TimelapseModule(Borg):
             while cmd.is_alive():
                 time.sleep(1)
 
-            fname = input("Enter timelapse name for {}/{} > ".format(
-                          spec.device, spec.label))
+            if not prefs:
+                fname = input("Enter timelapse name for {}/{} > ".format(
+                              spec.device, spec.label))
+            else:
+                fname = ""
 
             finalfname = os.path.join(destpath,
                                       "{}-{}-timelapse-{}.avi".format(
                                           spec.label, spec.device, fname))
             shutil.move(dest_avi, finalfname)
 
-            move = input("timelapse complete. Move archives? Y/n")
-            if move in ["y", "Y"]:
-                self._movearchives(spec, config)
+            if not prefs:
+                move = input("timelapse complete. Move archives? Y/n")
+                if move in ["y", "Y"]:
+                    return self._movearchives(spec, config)
+            else:
+                if prefs['move']:
+                    destpath = config.storage_node(prefs['movedest'])
+                    return self._bundlemod.fetch(spec, destpath, move=True)
+            return True
 
     def _suite(self, args, config):
         done = False
