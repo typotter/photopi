@@ -10,7 +10,7 @@ class RaspistillModule():
         self._threads = []
         pass
     
-    def main(self, args):
+    def main(self, args, prefs=None):
         if args["test"]:
             return self._do_test(args)
         if args["tl"]:

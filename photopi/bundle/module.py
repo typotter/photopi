@@ -19,7 +19,7 @@ class BundleModule(Borg):
         self._log = logging.getLogger(
             "{}.{}".format(self.__class__.__module__, self.__class__.__name__))
 
-    def main(self, args, config):
+    def main(self, args, config, prefs=None):
         """ Determines which command to run and runs it. """
         self._log.debug(args)
         self._log.debug(config)
